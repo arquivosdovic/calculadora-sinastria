@@ -1,0 +1,2433 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sinastria — Calculadora</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 120'%3E%3Ccircle cx='60' cy='60' r='58' fill='%230b0e1a'/%3E%3Ccircle cx='46' cy='60' r='32' fill='none' stroke='%23c9a15a' stroke-width='6'/%3E%3Ccircle cx='74' cy='60' r='32' fill='none' stroke='%23c9707a' stroke-width='6'/%3E%3Cpath d='M60 44 L64 56 L76 60 L64 64 L60 76 L56 64 L44 60 L56 56 Z' fill='%23f2ede4'/%3E%3C/svg%3E">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Space+Grotesk:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+
+  :root{
+    --ink: #0b0e1a;
+    --ink-2: #12162b;
+    --paper: #f2ede4;
+    --gold: #c9a15a;
+    --rose: #c9707a;
+    --teal: #6ea8a0;
+    --violet: #8b7fc7;
+    --amber: #b8834a;
+    --plum: #9c4f7e;
+    --line: rgba(242,237,228,0.14);
+    --muted: rgba(242,237,228,0.55);
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:
+      radial-gradient(ellipse 80% 50% at 50% -10%, rgba(139,127,199,0.18), transparent),
+      radial-gradient(ellipse 60% 40% at 90% 100%, rgba(201,112,122,0.12), transparent),
+      var(--ink);
+    color: var(--paper);
+    font-family: 'Space Grotesk', sans-serif;
+    min-height: 100vh;
+    padding: 48px 20px 80px;
+  }
+  .wrap{max-width: 880px; margin: 0 auto;}
+
+  header{ text-align:center; margin-bottom: 40px; }
+
+  .logo{ margin: 0 auto 22px; width: 72px; height: 72px; }
+  .logo svg{ width:100%; height:100%; overflow: visible; }
+  .logo circle.ring{
+    fill:none; stroke-width: 3.2;
+    stroke-dasharray: 214; stroke-dashoffset: 214;
+    animation: draw-ring 1.4s ease-out forwards;
+  }
+  .logo circle.ring.b{ animation-delay: 0.25s; }
+  .logo path.spark{
+    opacity: 0; transform-origin: 60px 60px;
+    animation: pop-spark 0.5s ease-out 1.15s forwards;
+  }
+  @keyframes draw-ring{ to{ stroke-dashoffset: 0; } }
+  @keyframes pop-spark{
+    0%{ opacity:0; transform: scale(0.3) rotate(-25deg); }
+    70%{ opacity:1; transform: scale(1.15) rotate(4deg); }
+    100%{ opacity:1; transform: scale(1) rotate(0deg); }
+  }
+  @media (prefers-reduced-motion: reduce){
+    .logo circle.ring{ stroke-dashoffset:0; animation:none; }
+    .logo path.spark{ opacity:1; animation:none; }
+  }
+  .eyebrow{
+    font-family:'JetBrains Mono', monospace;
+    font-size: 11px; letter-spacing: 0.25em; text-transform:uppercase;
+    color: var(--gold); margin-bottom: 14px;
+  }
+  h1{
+    font-family:'Cormorant Garamond', serif;
+    font-weight:600; font-style:italic;
+    font-size: clamp(38px, 6vw, 58px);
+    margin: 0 0 10px;
+    letter-spacing: 0.01em;
+  }
+  .sub{ color: var(--muted); font-size:15px; max-width:520px; margin:0 auto; line-height:1.6; }
+
+  .orbit-divider{ display:flex; align-items:center; gap:10px; margin: 36px 0 30px; opacity:0.5;}
+  .orbit-divider::before, .orbit-divider::after{ content:''; height:1px; flex:1; background: var(--line);}
+  .orbit-divider span{ width:6px; height:6px; border-radius:50%; background: var(--gold); }
+
+  .panel{
+    background: linear-gradient(180deg, rgba(242,237,228,0.04), rgba(242,237,228,0.02));
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 28px;
+    margin-bottom: 22px;
+  }
+  .panel h2{
+    font-family:'Cormorant Garamond', serif; font-weight:600; font-size:22px;
+    margin: 0 0 6px; color: var(--paper);
+  }
+  .panel .hint{ color: var(--muted); font-size: 13px; margin-bottom:18px; line-height:1.5;}
+
+  .row{ display:flex; gap:14px; flex-wrap:wrap; margin-bottom: 16px;}
+  .field{ flex:1; min-width:180px; }
+  label{ display:block; font-size:11px; letter-spacing:0.08em; text-transform:uppercase; color: var(--muted); margin-bottom:6px; font-family:'JetBrains Mono', monospace;}
+  input[type=text]{
+    width:100%; background: rgba(255,255,255,0.04); border:1px solid var(--line);
+    color: var(--paper); padding:10px 12px; border-radius:3px; font-family:inherit; font-size:14px;
+  }
+  input[type=text]:focus{ outline:none; border-color: var(--gold); }
+  select.field-select{
+    width:100%; background: rgba(255,255,255,0.04); border:1px solid var(--line);
+    color: var(--paper); padding:10px 12px; border-radius:3px; font-family:inherit; font-size:14px;
+  }
+  select.field-select:focus{ outline:none; border-color: var(--gold); }
+
+  textarea{
+    width:100%; min-height: 220px; background: rgba(0,0,0,0.25);
+    border: 1px solid var(--line); color: var(--paper);
+    font-family:'JetBrains Mono', monospace; font-size:12.5px; line-height:1.6;
+    padding: 14px; border-radius:3px; resize: vertical;
+  }
+  textarea:focus{ outline:none; border-color: var(--gold); }
+
+  button{
+    background: var(--gold); color: var(--ink); border:none;
+    font-family:'Space Grotesk', sans-serif; font-weight:600; font-size:14px;
+    padding: 13px 26px; border-radius:3px; cursor:pointer; letter-spacing:0.02em;
+    margin-top: 6px;
+    transition: transform 0.15s ease, opacity 0.15s ease;
+  }
+  button:hover{ transform: translateY(-1px); opacity:0.92;}
+  button:active{ transform: translateY(0); }
+  button:focus-visible{ outline: 2px solid var(--gold); outline-offset:3px;}
+
+  .error{ color: var(--rose); font-size:13px; margin-top:10px; display:none; }
+
+  .edit-banner{
+    display:none; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;
+    background: rgba(201,161,90,0.08); border:1px solid rgba(201,161,90,0.35); border-radius:3px;
+    padding:10px 14px; margin-bottom:16px; font-size:13px; color: rgba(242,237,228,0.85);
+  }
+  .edit-banner strong{ color: var(--gold); font-weight:600; }
+
+  #results{ display:none; }
+
+  .names{
+    text-align:center; font-family:'Cormorant Garamond', serif; font-style:italic;
+    font-size: 26px; margin-bottom: 4px;
+  }
+  .names .amp{ color:var(--gold); margin:0 10px; font-style:normal; }
+  .meta-line{ text-align:center; color:var(--muted); font-size:12px; font-family:'JetBrains Mono', monospace; margin-bottom: 30px;}
+  .confidence-note{
+    text-align:center; color: rgba(201,161,90,0.75); font-size:12px; line-height:1.5;
+    max-width:480px; margin: -22px auto 30px; font-style:italic;
+  }
+
+  .bars{ display:flex; flex-direction:column; gap:18px; margin-bottom: 8px;}
+  .bar-row .top{ display:flex; justify-content:space-between; margin-bottom:7px; font-size:13.5px;}
+  .bar-row .cat-name{ display:flex; align-items:center; gap:8px; }
+  .dot{ width:9px; height:9px; border-radius:50%; display:inline-block;}
+  .bar-track{ height:9px; background: rgba(255,255,255,0.06); border-radius:5px; overflow:hidden; }
+  .bar-fill{ height:100%; border-radius:5px; transition: width 1s cubic-bezier(.2,.8,.2,1); width:0%; }
+
+  .stat-row{ display:flex; gap:16px; margin-top:26px; flex-wrap:wrap;}
+  .stat{
+    flex:1; min-width:140px; border:1px solid var(--line); border-radius:4px;
+    padding:16px 18px; background: rgba(255,255,255,0.02);
+  }
+  .stat .val{ font-family:'Cormorant Garamond', serif; font-size:34px; font-weight:600; }
+  .stat .lbl{ font-size:11px; text-transform:uppercase; letter-spacing:0.08em; color:var(--muted); margin-top:2px; font-family:'JetBrains Mono', monospace;}
+  .stat .explainer{ font-size:11.5px; color: rgba(242,237,228,0.5); margin-top:8px; line-height:1.5; }
+  .stat-highlight{
+    border-color: rgba(201,161,90,0.5);
+    background: linear-gradient(135deg, rgba(201,161,90,0.08), rgba(139,127,199,0.05));
+  }
+  .stat-highlight .val{ color: var(--gold); }
+
+  .compat-note{
+    color: rgba(201,161,90,0.75); font-size:12px; line-height:1.5;
+    margin-top: 14px; font-style: italic;
+  }
+
+  .verdict{
+    margin-top: 30px; padding: 26px 28px; border-radius:4px;
+    background: linear-gradient(135deg, rgba(201,161,90,0.1), rgba(139,127,199,0.08));
+    border: 1px solid rgba(201,161,90,0.35);
+  }
+  .verdict .tag{ font-family:'JetBrains Mono', monospace; font-size:10.5px; letter-spacing:0.2em; text-transform:uppercase; color: var(--gold); margin-bottom:10px;}
+  .verdict h3{ font-family:'Cormorant Garamond', serif; font-weight:600; font-size:28px; margin:0 0 12px;}
+  .verdict p{ color: rgba(242,237,228,0.82); line-height:1.65; font-size:14.5px; margin:0; }
+
+  .markers{ display:flex; flex-wrap:wrap; gap:10px; margin-top:20px; }
+  .marker-chip{
+    position: relative;
+    border:1px solid var(--line); border-radius:20px;
+    font-family:'JetBrains Mono', monospace; font-size:11.5px; color: rgba(242,237,228,0.85);
+    background: rgba(255,255,255,0.03);
+  }
+  .marker-chip summary{
+    list-style:none; cursor:pointer; user-select:none;
+    display:inline-flex; align-items:center; gap:7px;
+    padding:7px 12px 7px 12px;
+  }
+  .marker-chip summary::-webkit-details-marker{ display:none; }
+  .marker-chip summary::after{ content:'▾'; font-size:9px; opacity:0.5; margin-left:2px; }
+  .marker-chip[open] summary::after{ content:'▴'; }
+  .marker-chip .icon{ font-size:13px; }
+  .marker-chip.saturn{ border-color: rgba(201,161,90,0.4); }
+  .marker-chip.saturn .icon{ color: var(--gold); }
+  .marker-chip.node{ border-color: rgba(139,127,199,0.4); }
+  .marker-chip.node .icon{ color: var(--violet); }
+  .marker-chip.vertex{ border-color: rgba(201,112,122,0.4); }
+  .marker-chip.vertex .icon{ color: var(--rose); }
+  .marker-chip.houses{ border-color: rgba(110,168,160,0.4); }
+  .marker-chip.houses .icon{ color: var(--teal); }
+  .marker-chip.chiron{ border-color: rgba(184,131,74,0.4); }
+  .marker-chip.chiron .icon{ color: var(--amber); }
+  .marker-chip.lilith{ border-color: rgba(156,79,126,0.4); }
+  .marker-chip.lilith .icon{ color: var(--plum); }
+  .marker-detail{
+    position:absolute; top:calc(100% + 6px); left:0; z-index:6;
+    background: var(--ink-2); border:1px solid var(--line); border-radius:6px;
+    padding:10px 12px; font-size:10.5px; line-height:1.65; color: rgba(242,237,228,0.8);
+    white-space: pre-line; min-width:220px; max-width:300px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+  }
+
+  .debug{ margin-top:22px; font-family:'JetBrains Mono', monospace; font-size:11.5px; color: var(--muted); }
+  .debug summary{ cursor:pointer; color: var(--teal); }
+  .debug ul{ margin: 10px 0 0; padding-left: 18px; line-height:1.7; }
+
+  footer{ text-align:center; color: var(--muted); font-size:12px; margin-top:50px; line-height:1.6;}
+
+  /* --- Comparação --- */
+  .panel-headline{ display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:6px; }
+  .panel-headline h2{ margin:0; }
+  .headline-actions{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+
+  select#sortBy{
+    background: rgba(255,255,255,0.04); border:1px solid var(--line); color: var(--paper);
+    font-family:'JetBrains Mono', monospace; font-size:11.5px; padding:8px 10px; border-radius:3px;
+  }
+  select#sortBy:focus{ outline:none; border-color: var(--gold); }
+  select#sortBy option, select.field-select option{
+    background-color: var(--ink-2); color: var(--paper);
+  }
+
+  .ghost-btn{
+    background: transparent; color: var(--muted); border:1px solid var(--line);
+    font-family:'JetBrains Mono', monospace; font-weight:400; font-size:11.5px;
+    padding:8px 12px; border-radius:3px; cursor:pointer; margin-top:0;
+    transition: color 0.15s ease, border-color 0.15s ease;
+  }
+  .ghost-btn:hover{ color: var(--rose); border-color: var(--rose); transform:none; opacity:1; }
+
+  .compare-empty{ color: var(--muted); font-size:13px; text-align:center; padding: 18px 0; }
+
+  .storage-warning{
+    display:none; align-items:flex-start; gap:8px; color: var(--rose); font-size:12.5px;
+    background: rgba(201,112,122,0.08); border:1px solid rgba(201,112,122,0.3);
+    border-radius:3px; padding:10px 12px; margin-bottom:16px; line-height:1.5;
+  }
+
+  .compare-grid{ display:grid; grid-template-columns: repeat(auto-fill, minmax(240px,1fr)); gap:14px; margin-top:16px; }
+
+  .compare-card{
+    position:relative; border:1px solid var(--line); border-radius:4px; padding:16px 16px 14px;
+    background: rgba(255,255,255,0.025);
+  }
+  .compare-card.top-pick{ border-color: rgba(201,161,90,0.55); background: linear-gradient(135deg, rgba(201,161,90,0.08), rgba(139,127,199,0.05)); }
+
+  .compare-card .badge{
+    font-family:'JetBrains Mono', monospace; font-size:9.5px; letter-spacing:0.14em; text-transform:uppercase;
+    color: var(--gold); margin-bottom:8px;
+  }
+  .compare-card .cnames{
+    font-family:'Cormorant Garamond', serif; font-style:italic; font-size:19px; margin-bottom:2px; padding-right:46px;
+  }
+  .compare-card .cnames .amp{ color: var(--gold); margin:0 6px; font-style:normal; }
+  .compare-card .cverdict{ font-size:12.5px; color: rgba(242,237,228,0.75); margin-bottom:12px; line-height:1.4; }
+
+  .cmarkers{ display:flex; flex-wrap:wrap; gap:6px; margin: -4px 0 12px; position:relative; z-index:2; }
+  .cmarker{
+    position:relative;
+    border:1px solid var(--line); border-radius:14px;
+    font-family:'JetBrains Mono', monospace; font-size:10px; color: rgba(242,237,228,0.75);
+    background: rgba(255,255,255,0.03);
+  }
+  .cmarker summary{
+    list-style:none; cursor:pointer; user-select:none;
+    display:inline-flex; align-items:center; gap:4px; padding:3px 9px;
+  }
+  .cmarker summary::-webkit-details-marker{ display:none; }
+  .cmarker.saturn{ border-color: rgba(201,161,90,0.4); }
+  .cmarker.node{ border-color: rgba(139,127,199,0.4); }
+  .cmarker.vertex{ border-color: rgba(201,112,122,0.4); }
+  .cmarker.houses{ border-color: rgba(110,168,160,0.4); }
+  .cmarker.chiron{ border-color: rgba(184,131,74,0.4); }
+  .cmarker.lilith{ border-color: rgba(156,79,126,0.4); }
+  .cmarker-detail{
+    position:absolute; top:calc(100% + 5px); left:0; z-index:6;
+    background: var(--ink-2); border:1px solid var(--line); border-radius:6px;
+    padding:9px 11px; font-size:10px; line-height:1.6; color: rgba(242,237,228,0.8);
+    white-space: pre-line; min-width:200px; max-width:260px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+  }
+
+  .compare-card .card-actions{ position:absolute; top:11px; right:10px; display:flex; gap:2px; }
+  .compare-card .icon-btn{
+    background:none; border:none; color: var(--muted);
+    font-size:14px; line-height:1; cursor:pointer; padding:3px 6px; margin:0; border-radius:3px;
+  }
+  .compare-card .icon-btn:hover{ color: var(--gold); background: rgba(255,255,255,0.05); transform:none; opacity:1; }
+  .compare-card .icon-btn.remove-btn:hover{ color: var(--rose); }
+
+  .mini-bars{ display:flex; flex-direction:column; gap:7px; margin-bottom:12px; }
+  .mini-bar-row .top{ display:flex; justify-content:space-between; font-size:10.5px; margin-bottom:3px; color: rgba(242,237,228,0.7); }
+  .mini-bar-row .top .cat-name{ display:flex; align-items:center; gap:6px; }
+  .mini-bar-row .top .dot{ width:6px; height:6px; }
+  .mini-bar-track{ height:5px; background: rgba(255,255,255,0.06); border-radius:4px; overflow:hidden; }
+  .mini-bar-fill{ height:100%; border-radius:4px; }
+
+  .compare-card .cstats{ display:grid; grid-template-columns: repeat(5, 1fr); gap:6px; }
+  .compare-card .cstat{ text-align:center; border:1px solid var(--line); border-radius:3px; padding:6px 3px; }
+  .compare-card .cstat .val{ font-family:'Cormorant Garamond', serif; font-size:16px; font-weight:600; }
+  .compare-card .cstat .lbl{ font-size:8px; text-transform:uppercase; letter-spacing:0.04em; color:var(--muted); font-family:'JetBrains Mono', monospace; margin-top:1px; }
+  .compare-card .cstat-highlight{ border-color: rgba(201,161,90,0.5); background: rgba(201,161,90,0.06); }
+  .compare-card .cstat-highlight .val{ color: var(--gold); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="logo" aria-hidden="true">
+      <svg viewBox="0 0 120 120">
+        <circle class="ring a" cx="46" cy="60" r="34" stroke="#c9a15a"/>
+        <circle class="ring b" cx="74" cy="60" r="34" stroke="#c9707a"/>
+        <path class="spark" d="M60 44 L64 56 L76 60 L64 64 L60 76 L56 64 L44 60 L56 56 Z" fill="#f2ede4"/>
+      </svg>
+    </div>
+    <div class="eyebrow">Astrologia · Sinastria</div>
+    <h1>Duas cartas, uma leitura</h1>
+    <p class="sub">Cole abaixo o texto de sinastria (aspectos entre planetas + sobreposição de casas) gerado pelo seu app de astrologia. A calculadora lê os aspectos e devolve um retrato da conexão.</p>
+  </header>
+
+  <div class="panel">
+    <h2>1. Nomes</h2>
+    <p class="hint">Preenchidos automaticamente se o texto tiver a linha "Sinastria entre X e Y" — ou edite à mão.</p>
+    <div class="row">
+      <div class="field">
+        <label>Pessoa 1</label>
+        <input type="text" id="name1" placeholder="Ex: Victor">
+      </div>
+      <div class="field">
+        <label>Pessoa 2</label>
+        <input type="text" id="name2" placeholder="Ex: Dalton">
+      </div>
+      <div class="field">
+        <label>Tipo de vínculo</label>
+        <select id="relType" class="field-select">
+          <option value="romantico">Romântico</option>
+          <option value="amizade">Amizade</option>
+          <option value="familia">Família</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>2. Cole os dados da sinastria</h2>
+    <p class="hint">Pode colar o arquivo inteiro (mapas individuais + seção de sinastria + casas) — a calculadora ignora o que não reconhece.</p>
+    <textarea id="raw" placeholder="Cole aqui o texto completo, incluindo as linhas do tipo:&#10;VL's Sun in Pisces Trine DD's Sun in Cancer (Orb: 4°31')&#10;DD's Sun in the 7th VL's house"></textarea>
+    <div class="error" id="errorMsg"></div>
+    <div class="edit-banner" id="editBanner"></div>
+    <br>
+    <button id="calcBtn">Calcular sinastria</button>
+  </div>
+
+  <div class="edit-banner" id="viewBanner" style="display:none;"></div>
+
+  <div id="results">
+    <div class="orbit-divider"><span></span></div>
+
+    <div class="names"><span id="rName1"></span><span class="amp">&amp;</span><span id="rName2"></span></div>
+    <div class="meta-line" id="metaLine"></div>
+    <div class="confidence-note" id="confidenceNote" style="display:none;"></div>
+
+    <div class="panel">
+      <div class="bars" id="bars"></div>
+
+      <div class="stat-row">
+        <div class="stat">
+          <div class="val" id="strengthVal">—</div>
+          <div class="lbl">Força da conexão</div>
+          <div class="explainer">% de aspectos muito exatos (orbe apertado) — quanto maior, mais "carregado" é o mapa entre vocês.</div>
+        </div>
+        <div class="stat">
+          <div class="val" id="harmonyVal">—</div>
+          <div class="lbl">Harmonia geral (todos os aspectos)</div>
+          <div class="explainer">% do peso astrológico que vem de aspectos fáceis (trígono, sextil, conjunção) em vez de tensos (quadratura, oposição), somando TODOS os aspectos — inclusive os que não entram em Pegação nem Estrutura. Útil como referência ampla, mas pode mascarar tensão concentrada num dos dois eixos abaixo.</div>
+        </div>
+      </div>
+      <div class="stat-row">
+        <div class="stat stat-highlight">
+          <div class="val" id="compatVal">—</div>
+          <div class="lbl">Compatibilidade Geral</div>
+          <div class="explainer">Combina Pegação e Estrutura (média geométrica, não simples) — só fica alta quando os dois eixos são razoavelmente bons. Um eixo forte não "carrega" sozinho o outro fraco.</div>
+        </div>
+      </div>
+      <div class="stat-row">
+        <div class="stat">
+          <div class="val" id="immediateVal">—</div>
+          <div class="lbl">Pegação (imediato)</div>
+          <div class="explainer">Harmonia só nos eixos de atração/reconhecimento físico imediato: Sol-Lua, Vênus-Marte, Vênus-Vênus, Marte-Marte, Lua-Lua, Lilith com Vênus/Marte, Ascendente com pessoais.</div>
+        </div>
+        <div class="stat">
+          <div class="val" id="structureVal">—</div>
+          <div class="lbl">Estrutura (longo prazo)</div>
+          <div class="explainer">Harmonia só nos eixos de permanência: Saturno, Nodo, Vértice e Quíron com pessoais/ângulos, e MC/IC com pessoais.</div>
+        </div>
+      </div>
+      <div class="compat-note" id="compatNote" style="display:none;"></div>
+
+      <div class="markers" id="markers" style="display:none;"></div>
+    </div>
+
+    <div class="verdict">
+      <div class="tag">Leitura sugerida</div>
+      <h3 id="verdictTitle"></h3>
+      <p id="verdictDesc"></p>
+    </div>
+
+    <details class="debug">
+      <summary>Ver dados brutos interpretados</summary>
+      <div id="debugContent"></div>
+    </details>
+  </div>
+
+  <div class="orbit-divider"><span></span></div>
+
+  <div class="panel" id="comparePanel">
+    <div class="panel-headline">
+      <h2>3. Comparar sinastrias</h2>
+      <div class="headline-actions">
+        <select id="sortBy">
+          <option value="recent">Mais recentes</option>
+          <option value="compatibility">Maior compatibilidade geral</option>
+          <option value="harmony">Maior harmonia</option>
+          <option value="strength">Maior força</option>
+          <option value="markers">Mais marcadores especiais</option>
+        </select>
+        <button type="button" class="ghost-btn" id="recalcAllBtn" title="Reaplica a lógica de pontuação atual em cima do texto original salvo de cada sinastria">Recalcular tudo</button>
+        <button type="button" class="ghost-btn" id="exportCsvBtn">Exportar CSV</button>
+        <button type="button" class="ghost-btn" id="exportJsonBtn">Exportar JSON</button>
+        <button type="button" class="ghost-btn" id="importJsonBtn">Importar JSON</button>
+        <input type="file" id="importJsonInput" accept=".json,application/json" style="display:none;">
+        <button type="button" class="ghost-btn" id="clearAllBtn">Limpar tudo</button>
+      </div>
+    </div>
+    <p class="hint">Toda vez que você calcular uma sinastria acima, ela entra automaticamente nesta lista — assim dá pra comparar vários pares (ou vários candidatos pra uma mesma pessoa) lado a lado. Os dados ficam salvos neste navegador.</p>
+    <div class="storage-warning" id="storageWarning">⚠ Seu navegador não deixou salvar os dados localmente (comum em aba anônima/privada). A comparação ainda funciona, mas some se você recarregar a página — exporte em CSV/JSON antes de fechar se quiser guardar.</div>
+    <div id="compareList"><div class="compare-empty">Nenhuma sinastria calculada ainda. Calcule a primeira acima pra começar a comparação.</div></div>
+  </div>
+
+  <footer>
+    Isso é uma leitura simbólica de entretenimento baseada em pesos heurísticos entre planetas, aspectos e casas — não é um veredito científico sobre a relação de vocês :)
+  </footer>
+</div>
+
+<script>
+// Semisquare (45°) e Sesquiquadrate (135°) foram adicionados porque vários softwares
+// profissionais de sinastria os incluem por padrão — antes caíam em "linha não
+// reconhecida" (avisado ao usuário, mas descartado do cálculo). "Square" precisa
+// continuar na lista porque a checagem por substring de "Semisquare" já vence "Square"
+// (indexOf de "Semisquare" é sempre menor, já que a palavra começa 4 caracteres antes).
+const ASPECT_WORDS = ['Conjunction','Opposition','Trine','Square','Sextile','Quincunx','Semisextile','Semisquare','Sesquiquadrate'];
+
+// Todas as constantes "no olho" (não calibradas contra leituras profissionais reais)
+// ficam centralizadas aqui, documentadas, em vez de espalhadas pelo código como magic
+// numbers soltos. Isso não as torna mais "corretas" — só torna explícito que são
+// heurísticas ajustáveis, e facilita revisar/recalibrar tudo de uma vez se um dia
+// houver um conjunto de sinastrias com leitura profissional conhecida pra comparar.
+const CALIBRATION = {
+  // amplifica o desvio da % de categoria em relação à média neutra (25%) antes de
+  // renormalizar — evita que a soma de muitos aspectos regrida pra perto de 25% em
+  // todas as categorias (ver computeScores)
+  categoryStretch: 1.8,
+
+  // amplifica o desvio da harmonia em relação ao ponto neutro (50%) — mesma lógica
+  // do categoryStretch, mas pro eixo harmônico/tenso
+  harmonyStretch: 1.6,
+
+  // faixa em que a leitura harmônica/tensa é tratada como MISTA em vez de decisiva.
+  // Abaixo de 'low' ou acima de 'high', o texto assume uma leitura plena; dentro da
+  // faixa, o texto ainda escolhe um "lado" (o majoritário, >=50%) mas sinaliza
+  // explicitamente que é uma leitura intermediária — evita o efeito degrau em que
+  // 54.9% e 55.1% de harmonia geravam textos radicalmente diferentes.
+  harmonyZone: { low: 45, high: 60 },
+
+  // fora da harmonyZone, threshold extra pra "isso é MUITO tenso" / "isso é MUITO
+  // harmônico" — controla o sufixo tipo "(bastante tensa)" no título
+  strongTenseThreshold: 38,
+  strongHarmonicThreshold: 72,
+
+  // se a 2ª e a 3ª categoria (em % ) estiverem mais perto do que isso, o "tema"
+  // escolhido pra sinastria é menos decisivo do que o texto sozinho sugeriria —
+  // o classify() sinaliza isso em vez de tratar como resolvido
+  nearTiePctGap: 3,
+
+  // só conta um contato de Saturno/Nodo como marcador narrativo se o orbe for
+  // apertado o suficiente (ver formatMarkerDetail / computeScores)
+  significantMarkerOrbWeight: 0.3,
+
+  // abaixo deste número de aspectos reconhecidos, a leitura é avisada como "baseada
+  // em poucos dados" — com poucos aspectos, 1-2 contatos isolados dominam a leitura
+  // de um jeito que parece mais decisivo do que realmente é
+  minAspectsForConfidence: 10,
+
+  // cada sub-score (Imediato/Estrutura) só é exibido se tiver pelo menos essa
+  // quantidade de aspectos elegíveis contribuindo — abaixo disso, 1 aspecto isolado
+  // decidiria o número sozinho, o que é mais ruído do que sinal
+  minAspectsPerAxis: 3,
+
+  // diferença mínima (em pontos percentuais) entre immediateHarmonyPct e
+  // structureHarmonyPct pra classify() emitir o aviso de desequilíbrio no texto do
+  // veredito (ex: "muita faísca, pouca estrutura" ou o inverso)
+  imbalanceThreshold: 25,
+};
+// (a distinção harmônico/tenso agora é feita por harmonicFraction(), mais abaixo,
+// que considera quais planetas estão envolvidos em vez de tratar toda conjunção como fácil)
+// Quincunx (150°) e Semisextile (30°) foram incluídos porque relatórios de sinastria
+// costumam listá-los, e antes eram descartados silenciosamente (linha com "Orb:" mas
+// sem nenhuma ASPECT_WORD reconhecida = perdida sem aviso nenhum pro usuário).
+
+// category vector order: [intelectual, emocional, sexual, pratico]
+const PLANET_PROFILE = {
+  'Sun':      [0.20,0.35,0.25,0.20],
+  'Moon':     [0.10,0.60,0.15,0.15],
+  'Mercury':  [0.70,0.15,0.05,0.10],
+  'Venus':    [0.15,0.45,0.30,0.10],
+  'Mars':     [0.10,0.10,0.65,0.15],
+  'Jupiter':  [0.30,0.35,0.15,0.20],
+  'Saturn':   [0.15,0.15,0.10,0.60],
+  'Uranus':   [0.50,0.15,0.25,0.10],
+  'Neptune':  [0.25,0.55,0.15,0.05],
+  'Pluto':    [0.10,0.20,0.55,0.15],
+  'Node':     [0.10,0.30,0.10,0.50],
+  // Nodo Sul: mesmo eixo do Nodo Norte, mas com a leitura tradicional invertida (passado/
+  // zona de conforto/hábito em vez de destino/crescimento) — pesos parecidos mas com um
+  // pouco mais de "prático" (hábito/rotina) e um pouco menos de "social" que o Nodo Norte.
+  'SouthNode':[0.10,0.35,0.10,0.45],
+  'Chiron':   [0.15,0.65,0.10,0.10],
+  'Lilith':   [0.10,0.15,0.70,0.05],
+  'Fortune':  [0.15,0.35,0.20,0.30],
+  'Vertex':   [0.10,0.30,0.45,0.15],
+  'Ascendant':[0.15,0.30,0.35,0.20],
+  'MC':       [0.15,0.15,0.10,0.60],
+  'DSC':      [0.15,0.35,0.30,0.20],
+  'IC':       [0.10,0.50,0.10,0.30],
+};
+const DEFAULT_PROFILE = [0.25,0.30,0.25,0.20];
+
+const HOUSE_PROFILE = {
+  1:[0.15,0.25,0.40,0.20], 2:[0.10,0.20,0.15,0.55], 3:[0.70,0.15,0.05,0.10],
+  4:[0.10,0.55,0.10,0.25], 5:[0.15,0.35,0.45,0.05], 6:[0.15,0.15,0.10,0.60],
+  7:[0.15,0.35,0.20,0.30], 8:[0.10,0.30,0.50,0.10], 9:[0.60,0.20,0.10,0.10],
+  10:[0.15,0.10,0.10,0.65], 11:[0.35,0.35,0.10,0.20], 12:[0.20,0.50,0.20,0.10],
+};
+
+// --- Nuances astrológicas aplicadas ao peso dos aspectos ---
+
+// Marte e Saturno são os maléficos clássicos: uma conjunção com eles carrega
+// fricção/pressão mesmo sendo geometricamente "fácil" — não é um trígono disfarçado.
+const HARD_PLANETS = new Set(['Mars','Saturn']);
+
+// Urano, Netuno e Plutão são transpessoais: intensos e desestabilizadores por
+// natureza. Uma conjunção com eles tende a ser ambivalente (nem fácil, nem só tensa).
+const TRANSPERSONAL_PLANETS = new Set(['Uranus','Neptune','Pluto']);
+
+// Quíron e Lilith são, na própria simbologia que a literatura de sinastria atribui a
+// eles, pontos ambivalentes por natureza — Quíron é "ferida E cura" no mesmo símbolo,
+// Lilith é desejo/sombra que magnetiza e desconforta ao mesmo tempo. Uma conjunção com
+// qualquer um dos dois intensifica essa dualidade, então não deveria cair no ramo
+// puramente harmônico (frac 1.0) só por não ser Marte/Saturno/transpessoal — mesma
+// família de tratamento que a conjunção "sozinha" de Saturno logo abaixo (0.5).
+const AMBIVALENT_CONJUNCTION_POINTS = new Set(['Chiron','Lilith']);
+
+// Saturno e Nodo Norte em contato com um pessoal do parceiro não são só "peso extra
+// no cálculo" (isso já acontece via HARD_PLANETS e AXIS_BOOST acima) — são também
+// marcadores narrativos tradicionais: Saturno como indicador de compromisso/permanência,
+// Nodo como indicador de "sensação de destino". Rastreamos os dois à parte, como dado
+// estruturado (contagem + descrição de cada contato), pra exibir como marcador visual
+// em vez de só embutir numa frase de texto corrido — assim dá pra mostrar, salvar,
+// comparar e exportar isso separadamente do resto da leitura.
+const CORE_PERSONAL_PLANETS = new Set(['Sun','Moon','Venus','Mars']);
+
+// Vértice é o ponto tradicional de "encontro fatídico" em sinastria — quando ele toca um
+// pessoal do parceiro OU um dos ângulos (Ascendente/MC), é lido classicamente como sinal
+// de encontro que "parecia destinado a acontecer". Rastreado à parte, no mesmo padrão de
+// Saturno/Nodo acima, em vez de só entrar no peso de categoria (que já acontece via
+// PLANET_PROFILE) — assim vira um marcador narrativo visível, não só um número diluído.
+// Vértice-Vértice mútuo (o "eixo elétrico") também entra aqui: é tradicionalmente tratado
+// como sinal de encontro destinado tão forte quanto — ou mais forte que — Vértice tocando
+// um pessoal isolado, e sem isso caía como aspecto genérico, sem marcador nenhum.
+const VERTEX_FATED_TARGETS = new Set(['Sun','Moon','Venus','Mars','Ascendant','MC','DSC','Vertex']);
+
+// Só contamos um contato como marcador se o orbe for apertado o suficiente pra ser um
+// sinal de verdade (não ruído de fundo). Usa o mesmo orbW já calculado por aspecto —
+// o valor em si vive em CALIBRATION.significantMarkerOrbWeight.
+
+// --- Eixo Imediato (pegação/faísca) vs Eixo Estrutura (longo prazo) ---
+// Não reclassifica TODOS os aspectos — só os que a literatura de sinastria mais associa
+// a cada papel. Aspectos fora das duas listas (ex: Mercúrio-Mercúrio, Júpiter solto)
+// continuam contribuindo só pro harmonyPct geral (a média de tudo), sem entrar em
+// nenhum dos dois sub-scores — não são decisivamente "spark" nem "estrutura".
+//
+// Imediato: os eixos clássicos de atração/reconhecimento físico — praticamente o mesmo
+// grupo do AXIS_BOOST tier 1, mais Vênus-Vênus e Marte-Marte (ressonância direta de
+// desejo/estilo quando o MESMO planeta se repete entre os dois mapas).
+const IMMEDIATE_AXIS_PAIRS = new Set([
+  'Moon-Sun', 'Mars-Venus', 'Venus-Venus', 'Mars-Mars',
+  'Ascendant-Sun', 'Ascendant-Moon', 'Ascendant-Venus', 'Ascendant-Mars',
+  // pares tier-2 do AXIS_BOOST (peso 1.20) — tão clássicos de atração/química imediata
+  // quanto Vênus-Marte, mas que ficaram de fora na primeira versão deste eixo, deixando
+  // o pool "imediato" artificialmente raso em mapas onde esses são os aspectos que
+  // aparecem (ex: Vênus sextil Sol, Marte oposição Sol) em vez de Vênus-Marte direto.
+  'Sun-Venus', 'Moon-Venus', 'Mars-Sun', 'Moon-Mars',
+  // Lua-Lua: ressonância emocional direta — a literatura de sinastria cita isso lado a
+  // lado com Sol-Lua e Vênus-Marte como um dos indicadores mais centrais de compatibilidade
+  // romântica (não estava incluído antes; só Vênus-Vênus e Marte-Marte tinham essa
+  // ressonância "mesmo planeta se repete" reconhecida).
+  'Moon-Moon',
+  // Lilith em contato com Vênus/Marte: atração magnética/tabu instantânea — a literatura
+  // de sinastria trata isso como um eixo de faísca imediata (desejo, química, "puxão"),
+  // não algo que se constrói com o tempo. Não incluímos Lilith-Sol/Lilith-Lua aqui: esses
+  // dois são mais sobre sombra/identidade do que sobre atração à primeira vista, então
+  // ficam de fora do eixo Imediato (mas continuam contando no peso geral de categoria e
+  // no marcador narrativo lilithMagneticContacts, que é mais abrangente por design).
+  'Lilith-Mars', 'Lilith-Venus',
+]);
+
+// Estrutura: os pontos tradicionalmente ligados a permanência/compromisso (Saturno),
+// destino/karma (Nodo), encontro fatídico (Vértice), papel social/doméstico (MC/IC) e
+// ferida/cura processada ao longo do tempo (Quíron) — quando tocam um planeta pessoal
+// do parceiro OU um dos ângulos (Ascendente/MC). Quíron entrou aqui (e não no eixo
+// Imediato) porque "ferida e cura" é uma dinâmica que se revela e se trabalha com o
+// tempo, não uma faísca de reconhecimento instantâneo — mesma família de Saturno/Nodo.
+const STRUCTURE_ANCHORS = new Set(['Saturn', 'Node', 'SouthNode', 'Vertex', 'MC', 'IC', 'DSC', 'Chiron']);
+function axisPoolFor(planet1, planet2){
+  const pairKey = [planet1, planet2].sort().join('-');
+  if (IMMEDIATE_AXIS_PAIRS.has(pairKey)) return 'immediate';
+  const anchorHitsPersonal = (anchor, other) =>
+    STRUCTURE_ANCHORS.has(anchor) && (CORE_PERSONAL_PLANETS.has(other) || other === 'Ascendant' || other === 'MC');
+  if (anchorHitsPersonal(planet1, planet2) || anchorHitsPersonal(planet2, planet1)) return 'structure';
+  // dois pontos "âncora" entre si (Nodo-Nodo, Saturno-Saturno, MC-MC etc.) também são
+  // sinal estrutural mútuo — em especial o eixo nodal alinhado entre os dois mapas, que a
+  // literatura trata como um dos marcadores kármicos mais fortes que existem. Antes ficava
+  // de fora (retornava null) porque a checagem exigia que UM lado fosse pessoal/ângulo.
+  if (STRUCTURE_ANCHORS.has(planet1) && STRUCTURE_ANCHORS.has(planet2)) return 'structure';
+  return null;
+}
+
+// Resumo compacto tipo " · 🟢2 🔴1" pro resumo do chip — só aparece quando o marcador
+// tem os dois lados (harmônico e tenso); se for só um lado, o número principal já basta.
+// Mostra o detalhamento só quando existe mais de um "sabor" de contato dentro do
+// mesmo marcador (ex: 2 harmônicos e 1 ambivalente) — se for tudo do mesmo tipo, o
+// número principal do chip já basta.
+function markerBreakdown(harmonic, ambivalent, tense){
+  const parts = [];
+  if (harmonic > 0) parts.push(`🟢${harmonic}`);
+  if (ambivalent > 0) parts.push(`🟡${ambivalent}`);
+  if (tense > 0) parts.push(`🔴${tense}`);
+  return parts.length > 1 ? ` · ${parts.join(' ')}` : '';
+}
+
+// Três estados em vez de dois: hFrac >= 0.6 flui de verdade, hFrac <= 0.4 atrita de
+// verdade, e a faixa estreita entre os dois é onde vivem os contatos genuinamente
+// ambivalentes deste sistema (conjunção de Saturno sozinha, conjunção transpessoal) —
+// hoje isso cai só em hFrac === 0.5, mas a faixa (em vez de igualdade exata) deixa
+// espaço pra futuros ajustes de calibração sem precisar tocar aqui de novo.
+function markerCategory(hFrac){
+  if (hFrac >= 0.6) return 'harmonic';
+  if (hFrac <= 0.4) return 'tense';
+  return 'ambivalent';
+}
+
+const PLANET_LABEL_PT = {
+  Sun:'Sol', Moon:'Lua', Venus:'Vênus', Mars:'Marte', Saturn:'Saturno', Node:'Nodo Norte',
+  SouthNode:'Nodo Sul', Vertex:'Vértice', Ascendant:'Ascendente', MC:'Meio-do-Céu', DSC:'Descendente',
+};
+const ASPECT_LABEL_PT = {
+  Conjunction:'conjunção', Trine:'trígono', Square:'quadratura', Opposition:'oposição',
+  Sextile:'sextil', Quincunx:'quincúncio', Semisextile:'semisextil',
+  Semisquare:'semiquadratura', Sesquiquadrate:'sesquiquadratura',
+};
+// isHarmonic (opcional): quando informado, prefixa a linha com 🟢/🔴 pra distinguir,
+// dentro do mesmo marcador (ex: "2 contatos de Saturno"), quais contatos fluem fácil
+// e quais vêm com atrito — sem isso, um trígono e uma oposição contavam igual dentro
+// do mesmo número, escondendo se aquele "compromisso" tende a apoiar ou pesar.
+// category: 'harmonic' | 'ambivalent' | 'tense' | undefined (undefined = sem cor,
+// usado nos poucos lugares que ainda chamam sem essa info). Terceiro estado adicionado
+// porque alguns contatos (ex: conjunção de Saturno sozinha) são genuinamente 50/50 —
+// forçá-los em "verde" ou "vermelho" escondia essa ambivalência real.
+function formatMarkerDetail(a, category){
+  const p1Label = PLANET_LABEL_PT[a.planet1] || a.planet1;
+  const p2Label = PLANET_LABEL_PT[a.planet2] || a.planet2;
+  const aspLabel = ASPECT_LABEL_PT[a.aspect] || a.aspect;
+  const prefix = category === 'harmonic' ? '🟢 ' : category === 'ambivalent' ? '🟡 ' : category === 'tense' ? '🔴 ' : '';
+  return `${prefix}${a.p1} (${p1Label}) ${aspLabel} ${a.p2} (${p2Label}) — orbe ${a.orb.toFixed(1)}°`;
+}
+
+// Marcador narrativo de "convergência de casas" — casas hoje só entram diluídas nas 4
+// categorias (peso baixo), mas dois padrões tradicionais merecem destaque à parte, no
+// mesmo espírito de Saturno/Nodo/Vértice acima:
+//  1) sobreposição RECÍPROCA: o mesmo planeta pessoal de A cai na casa N de B, E o
+//     mesmo planeta pessoal de B cai na MESMA casa N de A — reforço mútuo real, não
+//     coincidência (ex: Lua de A na 1ª de B + Lua de B na 1ª de A).
+//  2) planeta pessoal caindo na 1ª ou 7ª casa do outro (ângulos de "reconhecimento" e
+//     "parceria" mais citados em sinastria), mesmo sem reciprocidade.
+// Um mesmo par recíproco conta só como (1) — não duplica como (2) também, mesmo que a
+// casa envolvida seja 1ª ou 7ª — pra não inflar o mesmo contato duas vezes na lista.
+function computeHouseConvergence(houses){
+  const contacts = [];
+  const details = [];
+  const seen = new Set();
+
+  for (const h of houses){
+    if (!CORE_PERSONAL_PLANETS.has(h.planet)) continue;
+    const planetLabel = PLANET_LABEL_PT[h.planet] || h.planet;
+
+    const reciprocal = houses.find(h2 =>
+      h2 !== h && h2.planet === h.planet && h2.house === h.house &&
+      h2.p1 === h.p2 && h2.p2 === h.p1
+    );
+
+    if (reciprocal){
+      const key = [`${h.p1}-${h.planet}-${h.house}`, `${reciprocal.p1}-${reciprocal.planet}-${reciprocal.house}`].sort().join('|');
+      if (seen.has(key)) continue;
+      seen.add(key);
+      contacts.push({ type:'reciprocal' });
+      details.push(`${h.p1} (${planetLabel}) na ${h.house}ª de ${h.p2} ↔ ${reciprocal.p1} (${planetLabel}) na ${reciprocal.house}ª de ${reciprocal.p2} — sobreposição recíproca`);
+    } else if (h.house === 1 || h.house === 7){
+      contacts.push({ type:'angular' });
+      details.push(`${h.p1} (${planetLabel}) na ${h.house}ª de ${h.p2}`);
+    }
+  }
+
+  return { houseConvergenceContacts: contacts.length, houseConvergenceDetails: details };
+}
+
+// Casas angulares (1/4/7/10) são tradicionalmente as mais "potentes" numa
+// sobreposição de casas; cadentes (3/6/9/12) são as mais fracas/difusas.
+const ANGULAR_HOUSES = new Set([1,4,7,10]);
+const CADENT_HOUSES = new Set([3,6,9,12]);
+
+// Eixos com peso extra por serem os indicadores clássicos mais citados em sinastria.
+// Usamos pesos escalonados por "tier" em vez de um boost único: tier 1 são os eixos
+// mais centrais da literatura de sinastria; os demais são reais, mas um degrau abaixo
+// (ou mais ambivalentes, como Marte com Sol/Lua — vitalidade forte, mas mistura desejo
+// com atrito mais facilmente do que Vênus-Marte).
+//
+// Tier 1 (1.35):
+//  - Sol-Lua: identidade encontrando necessidade emocional, indicador nº1 de compatibilidade
+//  - Vênus-Marte: o eixo clássico de atração/desejo
+//  - Lua-Lua: ressonância emocional direta — citado lado a lado com Sol-Lua e Vênus-Marte
+//    como um dos aspectos mais centrais de sinastria romântica (antes ficava sem boost,
+//    pesando igual a qualquer par aleatório)
+//  - Ascendente com Sol/Lua/Vênus/Marte: "reconhecimento"/atração física imediata
+//
+// Tier 2 (1.30) — eixo do destino:
+//  - Nodo Norte com Sol/Lua/Vênus/Marte: a "sensação de destino/fatalidade" — puxão
+//    kármico tradicionalmente lido como tão significativo quanto Vênus-Marte em boa
+//    parte da literatura de sinastria moderna.
+//  - Nodo-Nodo (eixo nodal mútuo entre os dois mapas): quando os dois eixos nodais se
+//    alinham (conjunção/oposição entre Nodo Norte/Sul de A e de B), é lido como um dos
+//    marcadores kármicos mais fortes que existem — às vezes citado como mais decisivo
+//    que Nodo tocando um pessoal. Ficava sem nenhum boost antes.
+//
+// Tier 3 (1.20) — eixos pessoais secundários:
+//  - Sol-Vênus / Lua-Vênus: afeto e valores ("eu gosto de quem você é")
+//  - Sol-Marte / Lua-Marte: vitalidade e impulso — real, mas com mais tendência a
+//    atrito misturado do que Vênus-Marte, daí o boost menor
+//  - MC/IC com Sol/Lua/Vênus/Marte: MC é "quero te mostrar ao mundo" (visibilidade
+//    pública do vínculo); IC é intimidade doméstica profunda
+//  - Descendente com Sol/Lua/Vênus/Marte: o ângulo de parceria por excelência (7ª casa) —
+//    antes tratado como "sempre redundante com o Ascendente do outro" e por isso nunca
+//    normalizado/boostado; mas alguns relatórios reportam o Descendente explicitamente
+//    como ponto próprio, então agora ele é reconhecido e pesado (um degrau abaixo do
+//    Ascendente, no mesmo nível de MC/IC, por ser mais sobre o papel de parceria de longo
+//    prazo do que reconhecimento físico instantâneo).
+const AXIS_BOOST = new Map([
+  ['Moon-Sun', 1.35],
+  ['Mars-Venus', 1.35],
+  ['Moon-Moon', 1.35],
+  ['Ascendant-Sun', 1.35],
+  ['Ascendant-Moon', 1.35],
+  ['Ascendant-Venus', 1.35],
+  ['Ascendant-Mars', 1.35],
+
+  ['Node-Sun', 1.30],
+  ['Moon-Node', 1.30],
+  ['Node-Venus', 1.30],
+  ['Mars-Node', 1.30],
+  ['Node-Node', 1.30],
+
+  // Nodo Sul tocando um pessoal ou a si mesmo: mesmo tier de peso do Nodo Norte —
+  // a literatura de sinastria kármica não trata o Nodo Sul como um sinal mais fraco,
+  // só qualitativamente diferente (retrospectivo/familiar em vez de direcional/evolutivo).
+  // Essa diferença de qualidade já vive no PLANET_PROFILE (mais peso em prático/hábito,
+  // menos em social); o AXIS_BOOST mede intensidade do sinal, não sua natureza, e nisso
+  // Nodo Sul não é menos "fatídico" que Nodo Norte — só aponta pra outro lugar.
+  ['SouthNode-Sun', 1.30],
+  ['Moon-SouthNode', 1.30],
+  ['SouthNode-Venus', 1.30],
+  ['Mars-SouthNode', 1.30],
+  ['SouthNode-SouthNode', 1.30],
+
+  // Nodo Norte de A com Nodo Sul de B ("cruzado"): collapseNodeMirrors já trata isso
+  // como um contato genuinamente distinto do par alinhado (Node-Node/SouthNode-SouthNode),
+  // não um eco redundante. A literatura descreve essa configuração como complementar —
+  // o Nodo Sul de um lado é literalmente o território que o Nodo Norte do outro está
+  // buscando, o que a torna tão significativa quanto o par alinhado (algumas fontes
+  // tratam como a mais cooperativa/harmoniosa das combinações nodais, não uma mais fraca).
+  // Mesmo tier 1.30, sem base na literatura pra diferenciar pra cima ou pra baixo.
+  ['Node-SouthNode', 1.30],
+
+  ['Sun-Venus', 1.20],
+  ['Moon-Venus', 1.20],
+  ['Mars-Sun', 1.20],
+  ['Mars-Moon', 1.20],
+  ['MC-Sun', 1.20],
+  ['MC-Moon', 1.20],
+  ['MC-Venus', 1.20],
+  ['MC-Mars', 1.20],
+  ['IC-Sun', 1.20],
+  ['IC-Moon', 1.20],
+  ['IC-Venus', 1.20],
+  ['IC-Mars', 1.20],
+  ['DSC-Sun', 1.20],
+  ['DSC-Moon', 1.20],
+  ['DSC-Venus', 1.20],
+  ['DSC-Mars', 1.20],
+
+  // Vértice tocando um pessoal ou um dos ângulos: mesmo tier de peso do Nodo (1.30) —
+  // a literatura de sinastria trata "encontro fatídico" (Vértice) como um sinal tão
+  // forte quanto destino/karma (Nodo), já reconhecido em VERTEX_FATED_TARGETS como
+  // marcador narrativo; faltava o boost de peso equivalente na categorização.
+  // Vértice-Vértice mútuo entra no mesmo tier (ver comentário em VERTEX_FATED_TARGETS).
+  ['Moon-Vertex', 1.30],
+  ['Sun-Vertex', 1.30],
+  ['Venus-Vertex', 1.30],
+  ['Mars-Vertex', 1.30],
+  ['Ascendant-Vertex', 1.30],
+  ['MC-Vertex', 1.30],
+  ['Vertex-Vertex', 1.30],
+
+  // Quíron (ferida/cura) e Lilith (magnetismo/sombra) tocando um pessoal: mesmo tier
+  // de peso do MC/IC/DSC (1.20) — ambos já são rastreados como marcadores narrativos
+  // fortes (chironWoundContacts, lilithMagneticContacts) mas não tinham boost de peso
+  // correspondente na categorização, deixando "sinal forte" só no rótulo, não no peso.
+  ['Chiron-Sun', 1.20],
+  ['Chiron-Moon', 1.20],
+  ['Chiron-Venus', 1.20],
+  ['Chiron-Mars', 1.20],
+  ['Lilith-Sun', 1.20],
+  ['Lilith-Moon', 1.20],
+  ['Lilith-Venus', 1.20],
+  ['Lilith-Mars', 1.20],
+]);
+function axisBoost(planet1, planet2){
+  const pair = [planet1, planet2].sort().join('-');
+  return AXIS_BOOST.get(pair) || 1.0;
+}
+
+// Fração "harmônica" de um aspecto (0 = tenso, 1 = harmônico). Trígono/sextil
+// são sempre harmônicos e quadratura/oposição sempre tensos — mas a conjunção
+// é neutra por natureza: ela intensifica os dois planetas envolvidos, então
+// sua leitura depende de QUEM está conjunto.
+// Marte conjunto a Vênus ou a ele mesmo é um dos eixos de atração/paixão mais citados
+// em sinastria (química, desejo, "estar na mesma frequência" de energia/libido) — bem
+// diferente da fricção clássica de Marte-Saturno ou Marte-Sol. Tratado à parte, ANTES da
+// checagem genérica de HARD_PLANETS, porque senão qualquer conjunção com Marte caía em
+// 0.15 (quase puramente tensa) só por Marte estar no conjunto de "maléficos clássicos" —
+// o que contraria a própria literatura que o resto do peso (AXIS_BOOST em
+// IMMEDIATE_AXIS_PAIRS) já reconhece como eixo de química imediata.
+//
+// Marte-Lua NÃO entra neste grupo: é um contato genuinamente mais dividido, não uma
+// variação do mesmo tema de Marte-Vênus/Marte-Marte. A franqueza/impulsividade de Marte
+// tende a atritar com a sensibilidade emocional da Lua — a literatura de sinastria cita
+// esse contato com frequência como fonte de irritação e mágoa (a pessoa-Lua se sente
+// atropelada; a pessoa-Marte acha a Lua reativa demais), mesmo tendo também uma carga
+// passional real. Fica com um valor próprio, levemente pendendo pra fricção, em vez de
+// ser tratado como o mesmo tipo de química de Marte-Vênus/Marte-Marte.
+const MARS_CHEMISTRY_CONJUNCTION_PARTNERS = new Set(['Venus', 'Mars']);
+function isMarsChemistryConjunction(planet1, planet2){
+  if (planet1 === 'Mars' && MARS_CHEMISTRY_CONJUNCTION_PARTNERS.has(planet2)) return true;
+  if (planet2 === 'Mars' && MARS_CHEMISTRY_CONJUNCTION_PARTNERS.has(planet1)) return true;
+  return false;
+}
+function isMarsMoonConjunction(planet1, planet2){
+  return (planet1 === 'Mars' && planet2 === 'Moon') || (planet1 === 'Moon' && planet2 === 'Mars');
+}
+
+function harmonicFraction(aspectWord, planet1, planet2, sameSign){
+  if (aspectWord === 'Trine' || aspectWord === 'Sextile') return 1.0;
+  if (aspectWord === 'Square' || aspectWord === 'Opposition') return 0.0;
+  // Semisextile (30°) é um aspecto menor levemente favorável — dois signos vizinhos,
+  // sem tensão geométrica forte, mas também sem a fluidez de um sextil/trígono.
+  if (aspectWord === 'Semisextile') return 0.65;
+  // Quincunx (150°) é classicamente um aspecto de "ajuste": nem harmônico nem
+  // diretamente tenso como quadratura/oposição — mais um desconforto crônico, de
+  // baixo grau, que pede adaptação constante entre os dois temas envolvidos.
+  if (aspectWord === 'Quincunx') return 0.2;
+  // Semiquadratura (45°) e sesquiquadratura (135°) são versões "menores" de quadratura/
+  // oposição — mesma natureza de atrito, só que mais branda e mais difusa (irritação de
+  // baixo grau em vez de conflito aberto). Sesquiquadratura tende a ser lida como
+  // ligeiramente mais desestabilizadora que semiquadratura (mistura a tensão da
+  // quadratura com o desconforto de ajuste da oposição), daí o valor um pouco menor.
+  if (aspectWord === 'Semisquare') return 0.2;
+  if (aspectWord === 'Sesquiquadrate') return 0.15;
+  if (aspectWord === 'Conjunction'){
+    let frac;
+    if (isMarsChemistryConjunction(planet1, planet2)) frac = 0.65;
+    else if (isMarsMoonConjunction(planet1, planet2)) frac = 0.4;
+    // Marte-Saturno conjunto: os dois "maléficos clássicos" juntos — aqui sim a leitura
+    // dura se sustenta (ação bloqueada, frustração crônica), então fica ANTES da checagem
+    // genérica de Saturno logo abaixo, senão cairia no ramo ambivalente por engano.
+    else if ((planet1 === 'Mars' && planet2 === 'Saturn') || (planet1 === 'Saturn' && planet2 === 'Mars')) frac = 0.15;
+    // Saturno conjunto (sozinho, sem Marte) a um pessoal ou ângulo: tradicionalmente lido
+    // como o "aspecto de compromisso" por excelência — mas é genuinamente ambivalente, não
+    // maléfico. Pode ancorar o vínculo por décadas (peso real, sensação de seriedade) OU
+    // ser sentido como sufocante/crítico — qual lado domina depende de fatores que este
+    // sistema não enxerga (fase de vida, se os dois topam esse peso, outros aspectos de
+    // apoio). Tratar como 0.15 (quase-maléfico) supercarrega o lado ruim; 0.5 (o mesmo
+    // valor "neutro" usado pros transpessoais) reflete melhor esse 50/50 real.
+    else if (planet1 === 'Saturn' || planet2 === 'Saturn') frac = 0.5;
+    else if (HARD_PLANETS.has(planet1) || HARD_PLANETS.has(planet2)) frac = 0.15;
+    else if (TRANSPERSONAL_PLANETS.has(planet1) || TRANSPERSONAL_PLANETS.has(planet2)) frac = 0.5;
+    // Quíron/Lilith conjuntos a qualquer coisa: ambivalentes por definição simbólica
+    // (ver comentário em AMBIVALENT_CONJUNCTION_POINTS), não puramente harmônicos.
+    else if (AMBIVALENT_CONJUNCTION_POINTS.has(planet1) || AMBIVALENT_CONJUNCTION_POINTS.has(planet2)) frac = 0.5;
+    else frac = 1.0;
+    // conjunção "fora de signo" (dissociate): mesma proximidade em graus, mas os dois
+    // planetas caem em signos diferentes (comum perto de 0°/29°) — tradicionalmente um
+    // contato mais fraco e ambíguo do que uma fusão plena no mesmo signo, então puxamos
+    // o resultado 30% em direção ao neutro (0.5) em vez de manter a leitura "cheia".
+    if (sameSign === false) frac = 0.5 + (frac - 0.5) * 0.7;
+    return frac;
+  }
+  return 0.5;
+}
+
+function normPlanet(raw){
+  const s = raw.trim();
+  // ordem importa: "South Node" precisa ser checado ANTES do regex genérico de /node/i,
+  // senão "South Node" também bateria em /node/i e virava indistinguível do Nodo Norte —
+  // isso é exatamente o bug que causava contagem dupla de contatos nodais (ver
+  // collapseNodeMirrors mais abaixo): Nodo Norte e Nodo Sul têm significados tradicionais
+  // opostos (destino/crescimento vs. zona de conforto/passado) e são sempre 180° um do
+  // outro, então qualquer aspecto a um tem um "eco" espelhado automático no outro.
+  if (/south\s*node/i.test(s)) return 'SouthNode';
+  if (/node/i.test(s)) return 'Node';
+  if (/ascendant/i.test(s)) return 'Ascendant';
+  // Descendente: existia uma entrada 'DSC' em PLANET_PROFILE que nunca era alcançada
+  // porque nada normalizava a palavra "Descendant" até bater nela — caía direto em
+  // DEFAULT_PROFILE e nunca entrava em AXIS_BOOST/eixos. Corrigido aqui.
+  if (/descendant/i.test(s)) return 'DSC';
+  return s;
+}
+
+function orbToDeg(deg,min){ return parseInt(deg,10) + parseInt(min,10)/60; }
+
+// Decaimento do peso por grau de orbe, variando por tipo de aspecto. Conjunção e
+// oposição são os aspectos "maiores" clássicos — toleram orbe mais largo sem perder
+// muita força. Trígono/quadratura ficam no meio. Sextil, quincunx e semisextil são
+// aspectos menores/mais sutis: mesmo orbe numérico representa um contato bem mais
+// fraco do que representaria numa conjunção. Quanto MENOR o divisor, mais rápido o
+// peso cai conforme o orbe aumenta.
+const ORB_DECAY_DIVISOR = {
+  Conjunction: 3.0,
+  Opposition: 3.0,
+  Trine: 2.5,
+  Square: 2.5,
+  Sextile: 1.8,
+  Quincunx: 1.8,
+  Semisextile: 1.5,
+  Semisquare: 1.5,
+  Sesquiquadrate: 1.5,
+};
+
+function parseText(text){
+  const lines = text.split('\n').map(l=>l.trim()).filter(Boolean);
+  const aspects = [];
+  const houses = [];
+  // linhas que têm "Orb:" (ou seja, claramente são uma linha de aspecto) mas que não
+  // conseguimos interpretar — aspecto fora do vocabulário suportado, ou formato
+  // ligeiramente diferente do esperado. Antes isso era perdido sem nenhum aviso.
+  let unrecognizedCount = 0;
+
+  for (const line of lines){
+    if (line.startsWith('Sinastria')) continue;
+
+    // House overlay line
+    let hm = line.match(/^(.+?)'s\s+(.+?)\s+in\s+the\s+(\d+)(?:st|nd|rd|th)\s+(.+?)'s\s+house/i);
+    if (hm){
+      houses.push({
+        p1: hm[1].trim(), planet: normPlanet(hm[2]), house: parseInt(hm[3],10), p2: hm[4].trim()
+      });
+      continue;
+    }
+
+    // Aspect line — must contain Orb and one aspect keyword
+    if (!/Orb:/.test(line)) continue;
+    let aspectWord = null, kIdx = -1;
+    for (const w of ASPECT_WORDS){
+      const idx = line.indexOf(w);
+      if (idx !== -1 && (kIdx === -1 || idx < kIdx)){ kIdx = idx; aspectWord = w; }
+    }
+    if (!aspectWord){ unrecognizedCount++; continue; }
+
+    const left = line.slice(0, kIdx);
+    const right = line.slice(kIdx + aspectWord.length);
+
+    let p1, planet1, sign1, p2, planet2, sign2, deg, min;
+
+    // Try REGULAR: left = "P1's Planet in Sign", right = "P2's Planet in Sign (Orb: D°M'"
+    // flag "i" pq alguns relatórios exportam "'s" com S maiúsculo (ex: "GD'S Mars...")
+    let lm = left.match(/^(.+?)'s\s+(.+?)\s+in\s+(\w+)\s*$/i);
+    let rm = right.match(/^\s*(.+?)'s\s+(.+?)\s+in\s+(\w+)\s+\(Orb:\s*(\d+)°(\d+)/i);
+    if (lm && rm){
+      p1 = lm[1]; planet1 = lm[2]; sign1 = lm[3];
+      p2 = rm[1]; planet2 = rm[2]; sign2 = rm[3]; deg = rm[4]; min = rm[5];
+    } else {
+      // Try IRREGULAR: left = "P1's Planet in Sign P2's", right = "Planet in Sign (Orb: D°M'"
+      let lm2 = left.match(/^(.+?)'s\s+(.+?)\s+in\s+(\w+)\s+(.+?)'s\s*$/i);
+      let rm2 = right.match(/^\s*(.+?)\s+in\s+(\w+)\s+\(Orb:\s*(\d+)°(\d+)/);
+      if (lm2 && rm2){
+        p1 = lm2[1]; planet1 = lm2[2]; sign1 = lm2[3]; p2 = lm2[4];
+        planet2 = rm2[1]; sign2 = rm2[2]; deg = rm2[3]; min = rm2[4];
+      } else {
+        unrecognizedCount++;
+        continue; // unparseable line, skip
+      }
+    }
+
+    aspects.push({
+      p1: p1.trim(), planet1: normPlanet(planet1), sign1,
+      p2: p2.trim(), planet2: normPlanet(planet2), sign2,
+      aspect: aspectWord, orb: orbToDeg(deg,min)
+    });
+  }
+
+  // relatórios às vezes listam o mesmo par de aspecto duas vezes (A→B e B→A,
+  // ou a linha repetida) — sem isso, o peso desse aspecto dobra indevidamente.
+  const dedupedAspects = dedupeAspects(aspects);
+  const duplicatesRemoved = aspects.length - dedupedAspects.length;
+
+  // Nodo Sul é sempre o Nodo Norte + 180° — então TODO aspecto ao Nodo Norte tem um
+  // "eco" geometricamente automático ao Nodo Sul (e vice-versa), mesmo sem ser
+  // duplicata textual: conjunção vira oposição, trígono vira sextil, sextil vira
+  // trígono, semisextil vira quincúncio, quincúncio vira semisextil, e quadratura
+  // continua quadratura (90° de P é sempre também 90° de P+180). Muitos relatórios
+  // listam as duas leituras como se fossem fatos independentes — sem colapsar isso,
+  // um único alinhamento nodal conta 2x (ou até 4x, quando os dois lados do par
+  // envolvem Nodo) tanto no peso do harmonyPct quanto nos marcadores narrativos.
+  const { collapsed: nodeCollapsedAspects, nodeMirrorsCollapsed } = collapseNodeMirrors(dedupedAspects);
+
+  return {
+    aspects: nodeCollapsedAspects, houses, duplicatesRemoved, unrecognizedCount, nodeMirrorsCollapsed
+  };
+}
+
+// aspecto → seu "espelho" geométrico ao ponto oposto (ver comentário acima)
+const NODE_MIRROR_ASPECT = {
+  Conjunction: 'Opposition', Opposition: 'Conjunction',
+  Trine: 'Sextile', Sextile: 'Trine',
+  Semisextile: 'Quincunx', Quincunx: 'Semisextile',
+  Square: 'Square',
+};
+
+// Remove ecos redundantes entre Nodo Norte e Nodo Sul: quando um aspecto ao Nodo Sul
+// tem um par correspondente ao Nodo Norte (mesmas duas pessoas, mesmo "outro" planeta/
+// ponto, aspecto espelhado por NODE_MIRROR_ASPECT, orbe batendo bem de perto — tolerância
+// pequena pra cobrir arredondamento de origem), mantém só a versão do Nodo Norte (é o
+// ponto tradicionalmente mais citado) e descarta o eco do Nodo Sul. Se não houver par
+// correspondente (relatório só listou um lado), mantém como está — ainda vira marcador,
+// só que via SouthNode em vez de Node.
+function collapseNodeMirrors(aspects){
+  const ORB_TOLERANCE = 0.05; // graus — cobre diferença de arredondamento entre as duas linhas
+  const isNodal = p => p === 'Node' || p === 'SouthNode';
+  const toDrop = new Set();
+
+  for (let i = 0; i < aspects.length; i++){
+    const a = aspects[i];
+    // só nos interessa quando ALGUM lado do aspecto é SouthNode (candidato a eco)
+    if (a.planet1 !== 'SouthNode' && a.planet2 !== 'SouthNode') continue;
+    if (toDrop.has(i)) continue;
+
+    for (let j = 0; j < aspects.length; j++){
+      if (i === j || toDrop.has(j)) continue;
+      const b = aspects[j];
+      if (!isNodal(b.planet1) && !isNodal(b.planet2)) continue;
+      // "b" precisa ter Node (Norte) no lugar exato onde "a" tem SouthNode, com o mesmo
+      // "outro" planeta/pessoa do outro lado, e o mesmo par de pessoas
+      const sameOtherSide =
+        (a.planet1 === 'SouthNode' && b.planet1 === 'Node' && a.planet2 === b.planet2 && a.p1 === b.p1 && a.p2 === b.p2) ||
+        (a.planet2 === 'SouthNode' && b.planet2 === 'Node' && a.planet1 === b.planet1 && a.p1 === b.p1 && a.p2 === b.p2);
+      if (!sameOtherSide) continue;
+      if (NODE_MIRROR_ASPECT[a.aspect] !== b.aspect) continue;
+      if (Math.abs(a.orb - b.orb) > ORB_TOLERANCE) continue;
+      // achou o par espelhado — descarta o lado SouthNode, mantém o Node (Norte)
+      toDrop.add(i);
+      break;
+    }
+  }
+
+  // Caso à parte: quando os DOIS lados do aspecto são nodais (eixo nodal de A tocando
+  // o eixo nodal de B), o loop acima não pega, porque ele exige um "outro lado" fixo
+  // e não-nodal (ex: Sol) pra comparar. Aqui os dois lados são móveis ao mesmo tempo:
+  //  - Node-Node E SouthNode-SouthNode medem o MESMO ângulo (os dois lados somam +180°,
+  //    a diferença entre eles não muda) — mesmo aspecto, mesmo orbe, eco puro.
+  //  - Node-SouthNode E SouthNode-Node também medem o mesmo ângulo entre si (por
+  //    simetria: -180° e +180° caem no mesmo lugar mod 360°) — outro par de eco puro,
+  //    mas MEDE UM ÂNGULO DIFERENTE do par Node-Node/SouthNode-SouthNode acima, então
+  //    os dois pares não se cancelam entre si — cada par só colapsa com o seu próprio par.
+  // Sem isso, um único cruzamento de eixos nodais podia contar até 2x no peso de
+  // harmonyPct/estrutura (ou até 4x, se o relatório listar as duas orientações).
+  for (let i = 0; i < aspects.length; i++){
+    const a = aspects[i];
+    if (toDrop.has(i)) continue;
+    if (!isNodal(a.planet1) || !isNodal(a.planet2)) continue; // precisa ser nodal dos dois lados
+
+    for (let j = i + 1; j < aspects.length; j++){
+      if (toDrop.has(j)) continue;
+      const b = aspects[j];
+      if (!isNodal(b.planet1) || !isNodal(b.planet2)) continue;
+      if (a.p1 !== b.p1 || a.p2 !== b.p2) continue; // mesmo par de pessoas, mesma orientação
+      if (a.aspect !== b.aspect) continue; // eco de par totalmente nodal preserva o tipo de aspecto
+      if (Math.abs(a.orb - b.orb) > ORB_TOLERANCE) continue;
+
+      // "alinhado" = os dois lados são do mesmo tipo (Node-Node ou SouthNode-SouthNode);
+      // "cruzado" = um lado Node, outro SouthNode. Só colapsa dentro do mesmo grupo —
+      // um alinhado nunca é eco de um cruzado (medem ângulos diferentes de verdade).
+      const aAligned = a.planet1 === a.planet2;
+      const bAligned = b.planet1 === b.planet2;
+      if (aAligned !== bAligned) continue;
+
+      // mantém a versão com Node (Norte) — dentro do grupo alinhado, Node-Node > SouthNode-SouthNode;
+      // dentro do grupo cruzado, prioriza o lado de p1 sendo Node.
+      const aHasNorthFirst = a.planet1 === 'Node';
+      const bHasNorthFirst = b.planet1 === 'Node';
+      if (aHasNorthFirst && !bHasNorthFirst){ toDrop.add(j); }
+      else if (!aHasNorthFirst && bHasNorthFirst){ toDrop.add(i); break; }
+      else { toDrop.add(j); } // ambíguo (ambos ou nenhum começam com Node) — mantém o primeiro, descarta o segundo
+    }
+  }
+
+  const collapsed = aspects.filter((_, idx) => !toDrop.has(idx));
+  return { collapsed, nodeMirrorsCollapsed: toDrop.size };
+}
+
+function dedupeAspects(aspects){
+  const byKey = new Map();
+  for (const a of aspects){
+    // chave simétrica: não importa se A-planeta veio primeiro ou segundo
+    const sideA = `${a.p1.toLowerCase()}::${a.planet1.toLowerCase()}`;
+    const sideB = `${a.p2.toLowerCase()}::${a.planet2.toLowerCase()}`;
+    const key = [sideA, sideB].sort().join('||') + '||' + a.aspect;
+    const existing = byKey.get(key);
+    // se aparecer mais de uma vez, fica só a leitura com orbe mais exato
+    if (!existing || a.orb < existing.orb){
+      byKey.set(key, a);
+    }
+  }
+  return Array.from(byKey.values());
+}
+
+// Conta, pra cada par de planetas (não-direcional), quantos aspectos existem entre as
+// duas pessoas. Quando o mesmo par aparece nos dois sentidos — ex: Vênus de A com Marte
+// de B, E Marte de A com Vênus de B — isso é reciprocidade: um reforço mútuo clássico em
+// sinastria (não é a mesma coisa que duplicata, que já é removida em dedupeAspects; aqui
+// são dois aspectos genuinamente diferentes que por acaso "fecham o ciclo" no mesmo eixo).
+function reciprocityCounts(aspects){
+  const counts = new Map();
+  for (const a of aspects){
+    const planetPair = [a.planet1, a.planet2].sort().join('-');
+    counts.set(planetPair, (counts.get(planetPair) || 0) + 1);
+  }
+  return counts;
+}
+
+function computeScores(parsed){
+  const cats = { intelectual:0, emocional:0, sexual:0, pratico:0 };
+  let harmoniousW = 0, tenseW = 0;
+  let tightCount = 0;             // aspectos com orbe < 2°, usados pra medir "força"
+  let strengthEligibleCount = 0;  // total considerado pra "força" (exclui outer-outer, que é geracional)
+  let saturnCommitmentContacts = 0; // contatos de Saturno com pessoais — indicador de compromisso/permanência
+  let saturnCommitmentHarmonic = 0, saturnCommitmentAmbivalent = 0, saturnCommitmentTense = 0;
+  const saturnCommitmentDetails = [];
+  let nodeDestinyContacts = 0;      // contatos de Nodo com pessoais — indicador de "sensação de destino"
+  let nodeDestinyHarmonic = 0, nodeDestinyAmbivalent = 0, nodeDestinyTense = 0;
+  const nodeDestinyDetails = [];
+  // eixo nodal mútuo: quando o Nodo (Norte OU Sul, depois de colapsados os ecos
+  // espelhados em parseText) de A toca o Nodo de B — marcador kármico distinto de
+  // "Nodo tocando um pessoal", tradicionalmente um dos sinais de destino mais fortes
+  let nodeAxisContacts = 0;
+  let nodeAxisHarmonic = 0, nodeAxisAmbivalent = 0, nodeAxisTense = 0;
+  const nodeAxisDetails = [];
+  let vertexFatedContacts = 0;      // contatos de Vértice com pessoais/ângulos/Vértice — indicador de "encontro fatídico"
+  let vertexFatedHarmonic = 0, vertexFatedAmbivalent = 0, vertexFatedTense = 0;
+  const vertexFatedDetails = [];
+  // Quíron com um pessoal do parceiro: marcador narrativo tradicional de "ferida e cura"
+  // (o "curador ferido") — tema central na literatura de sinastria, mas que até aqui só
+  // entrava no peso de categoria via PLANET_PROFILE, sem virar um marcador visível.
+  let chironWoundContacts = 0;
+  let chironWoundHarmonic = 0, chironWoundAmbivalent = 0, chironWoundTense = 0;
+  const chironWoundDetails = [];
+  // Lilith com um pessoal do parceiro: marcador narrativo tradicional de atração
+  // magnética/tabu (desejo intenso, dinâmica de poder) — um dos indicadores mais citados
+  // de sinastria moderna, na mesma situação que Quíron: só pesava, nunca aparecia.
+  let lilithMagneticContacts = 0;
+  let lilithMagneticHarmonic = 0, lilithMagneticAmbivalent = 0, lilithMagneticTense = 0;
+  const lilithMagneticDetails = [];
+
+  // Eixo Imediato (pegação/faísca) e Eixo Estrutura (longo prazo) — sub-pools de
+  // harmoniousW/tenseW calculados só sobre os aspectos que caem em cada eixo
+  // (ver axisPoolFor), pra não deixar a média geral de dezenas de aspectos esconder
+  // tensão concentrada especificamente onde ela mais pesa pro tipo de vínculo.
+  let immediateHarmoniousW = 0, immediateTenseW = 0, immediateEligibleCount = 0;
+  let structureHarmoniousW = 0, structureTenseW = 0, structureEligibleCount = 0;
+
+  const recipCounts = reciprocityCounts(parsed.aspects);
+
+  for (const a of parsed.aspects){
+    const prof1 = PLANET_PROFILE[a.planet1] || DEFAULT_PROFILE;
+    const prof2 = PLANET_PROFILE[a.planet2] || DEFAULT_PROFILE;
+    const vec = [0,1,2,3].map(i => prof1[i] + prof2[i]);
+    const sum = vec.reduce((x,y)=>x+y,0);
+    const norm = vec.map(v=>v/sum);
+
+    // decaimento exponencial: aspectos apertados pesam MUITO mais que os largos.
+    // isso evita que a soma de 80+ aspectos regrida pra perto de 25% em cada categoria.
+    // o divisor varia por tipo de aspecto (ver ORB_DECAY_DIVISOR): aspectos maiores
+    // (conjunção/oposição) toleram orbe mais largo sem perder força; os menores
+    // (sextil/quincunx/semisextil) enfraquecem bem mais rápido conforme o orbe abre.
+    const orbW = Math.exp(-a.orb / (ORB_DECAY_DIVISOR[a.aspect] || 2.5));
+
+    // fração harmônica do aspecto (considera quem está em conjunção — não só o tipo
+    // geométrico — e se a conjunção é "fora de signo", o que a enfraquece)
+    const sameSign = a.sign1 && a.sign2 ? (a.sign1.toLowerCase() === a.sign2.toLowerCase()) : true;
+    const hFrac = harmonicFraction(a.aspect, a.planet1, a.planet2, sameSign);
+
+    // eixos Sol-Lua, Vênus-Marte, Nodo e Ascendente/MC/IC com os pessoais pesam mais:
+    // são os indicadores clássicos mais citados em sinastria (ver AXIS_BOOST acima)
+    const boost = axisBoost(a.planet1, a.planet2);
+
+    // Saturno/Nodo com um planeta pessoal do parceiro: marcadores narrativos de
+    // compromisso/destino, rastreados à parte (não alteram o peso do aspecto em si —
+    // isso já acontece via HARD_PLANETS/AXIS_BOOST). Só contam se o orbe for apertado
+    // o suficiente pra ser um sinal, não ruído de fundo.
+    if (orbW > CALIBRATION.significantMarkerOrbWeight){
+      // >=0.5 trata a fração harmônica do próprio aspecto (trígono/sextil=1.0,
+      // quadratura/oposição=0.0, conjunção variável) como sinal de "flui" vs "atrita" —
+      // sem isso, um trígono e uma oposição de Saturno contavam igual dentro do mesmo
+      // número, escondendo se aquele "compromisso" tende a apoiar ou pesar.
+      const markerCat = markerCategory(hFrac);
+      if ((a.planet1 === 'Saturn' && CORE_PERSONAL_PLANETS.has(a.planet2)) ||
+          (a.planet2 === 'Saturn' && CORE_PERSONAL_PLANETS.has(a.planet1))){
+        saturnCommitmentContacts++;
+        if (markerCat === 'harmonic') saturnCommitmentHarmonic++; else if (markerCat === 'ambivalent') saturnCommitmentAmbivalent++; else saturnCommitmentTense++;
+        saturnCommitmentDetails.push(formatMarkerDetail(a, markerCat));
+      }
+      if (((a.planet1 === 'Node' || a.planet1 === 'SouthNode') && CORE_PERSONAL_PLANETS.has(a.planet2)) ||
+          ((a.planet2 === 'Node' || a.planet2 === 'SouthNode') && CORE_PERSONAL_PLANETS.has(a.planet1))){
+        nodeDestinyContacts++;
+        if (markerCat === 'harmonic') nodeDestinyHarmonic++; else if (markerCat === 'ambivalent') nodeDestinyAmbivalent++; else nodeDestinyTense++;
+        nodeDestinyDetails.push(formatMarkerDetail(a, markerCat));
+      }
+      // eixo nodal mútuo: os DOIS lados do aspecto são pontos nodais (Nodo Norte ou
+      // Sul de cada pessoa) — ou seja, os eixos nodais de A e B se tocam diretamente,
+      // não só o Nodo de um com um planeta pessoal do outro.
+      if ((a.planet1 === 'Node' || a.planet1 === 'SouthNode') &&
+          (a.planet2 === 'Node' || a.planet2 === 'SouthNode')){
+        nodeAxisContacts++;
+        if (markerCat === 'harmonic') nodeAxisHarmonic++; else if (markerCat === 'ambivalent') nodeAxisAmbivalent++; else nodeAxisTense++;
+        nodeAxisDetails.push(formatMarkerDetail(a, markerCat));
+      }
+      if ((a.planet1 === 'Vertex' && VERTEX_FATED_TARGETS.has(a.planet2)) ||
+          (a.planet2 === 'Vertex' && VERTEX_FATED_TARGETS.has(a.planet1))){
+        vertexFatedContacts++;
+        if (markerCat === 'harmonic') vertexFatedHarmonic++; else if (markerCat === 'ambivalent') vertexFatedAmbivalent++; else vertexFatedTense++;
+        vertexFatedDetails.push(formatMarkerDetail(a, markerCat));
+      }
+      if ((a.planet1 === 'Chiron' && CORE_PERSONAL_PLANETS.has(a.planet2)) ||
+          (a.planet2 === 'Chiron' && CORE_PERSONAL_PLANETS.has(a.planet1))){
+        chironWoundContacts++;
+        if (markerCat === 'harmonic') chironWoundHarmonic++; else if (markerCat === 'ambivalent') chironWoundAmbivalent++; else chironWoundTense++;
+        chironWoundDetails.push(formatMarkerDetail(a, markerCat));
+      }
+      if ((a.planet1 === 'Lilith' && CORE_PERSONAL_PLANETS.has(a.planet2)) ||
+          (a.planet2 === 'Lilith' && CORE_PERSONAL_PLANETS.has(a.planet1))){
+        lilithMagneticContacts++;
+        if (markerCat === 'harmonic') lilithMagneticHarmonic++; else if (markerCat === 'ambivalent') lilithMagneticAmbivalent++; else lilithMagneticTense++;
+        lilithMagneticDetails.push(formatMarkerDetail(a, markerCat));
+      }
+    }
+
+    // eixo imediato (pegação) vs eixo estrutura (longo prazo) — ver axisPoolFor. Feito
+    // com o mesmo harmContribution/hFrac do cálculo de harmonia geral, só que somado
+    // num sub-pool separado, pra não deixar dezenas de aspectos neutros diluir o sinal
+    // específico de cada eixo.
+    const pool = axisPoolFor(a.planet1, a.planet2);
+
+    // dois planetas transpessoais entre si (Urano/Netuno/Plutão) tendem a ser
+    // geracionais — compartilhados por qualquer par nascido na mesma época — então
+    // pesam bem menos na leitura pessoal do vínculo.
+    const bothOuter = TRANSPERSONAL_PLANETS.has(a.planet1) && TRANSPERSONAL_PLANETS.has(a.planet2);
+    const generationalDiscount = bothOuter ? 0.3 : 1.0;
+
+    // reciprocidade: quando o mesmo par de planetas conecta as duas pessoas nos dois
+    // sentidos (não só duplicata — dois aspectos de fato diferentes "fechando o eixo"),
+    // é um reforço mútuo tradicionalmente lido como sinal mais forte que um contato único
+    const planetPair = [a.planet1, a.planet2].sort().join('-');
+    const reciprocityBoost = (recipCounts.get(planetPair) || 1) >= 2 ? 1.15 : 1.0;
+
+    // 0.8 (bem tenso) .. 1.0 (bem harmônico), escalado pelo eixo, reciprocidade e descontado se geracional
+    const mult = (0.8 + 0.2*hFrac) * boost * generationalDiscount * reciprocityBoost;
+    const weight = orbW * mult;
+
+    cats.intelectual += norm[0]*weight;
+    cats.emocional   += norm[1]*weight;
+    cats.sexual       += norm[2]*weight;
+    cats.pratico       += norm[3]*weight;
+
+    const harmContribution = orbW * boost * generationalDiscount * reciprocityBoost;
+    harmoniousW += harmContribution * hFrac;
+    tenseW      += harmContribution * (1 - hFrac);
+
+    if (pool === 'immediate'){
+      immediateHarmoniousW += harmContribution * hFrac;
+      immediateTenseW      += harmContribution * (1 - hFrac);
+      immediateEligibleCount++;
+    } else if (pool === 'structure'){
+      structureHarmoniousW += harmContribution * hFrac;
+      structureTenseW      += harmContribution * (1 - hFrac);
+      structureEligibleCount++;
+    }
+
+    // aspectos geracionais não contam pra "força da conexão" — praticamente
+    // qualquer par da mesma faixa etária teria algo parecido, não é sinal pessoal
+    if (!bothOuter){
+      strengthEligibleCount++;
+      if (a.orb < 2) tightCount++;
+    }
+  }
+
+  // sobreposições de casa: combinam a natureza do planeta com o tema da casa
+  // (ex: Vênus de A na 7ª de B pesa diferente de Mercúrio de A na 7ª de B —
+  // antes os dois pesavam igual, o que jogava fora um dado real do relatório)
+  for (const h of parsed.houses){
+    const planetProf = PLANET_PROFILE[h.planet] || DEFAULT_PROFILE;
+    const houseProf = HOUSE_PROFILE[h.house] || DEFAULT_PROFILE;
+    const combined = [0,1,2,3].map(i => planetProf[i]*0.6 + houseProf[i]*0.4);
+
+    // casas angulares (1/4/7/10) são tradicionalmente mais potentes; cadentes (3/6/9/12), mais fracas
+    const houseStrength = ANGULAR_HOUSES.has(h.house) ? 1.25 : (CADENT_HOUSES.has(h.house) ? 0.85 : 1.0);
+    const weight = 0.35 * houseStrength;
+
+    cats.intelectual += combined[0]*weight;
+    cats.emocional   += combined[1]*weight;
+    cats.sexual       += combined[2]*weight;
+    cats.pratico       += combined[3]*weight;
+  }
+
+  const catSum = cats.intelectual + cats.emocional + cats.sexual + cats.pratico;
+  const rawPct = {};
+  for (const k in cats) rawPct[k] = catSum > 0 ? (cats[k]/catSum*100) : 25;
+
+  // amplifica o desvio em relação à média neutra (25%) e renormaliza pra somar 100.
+  // obs: antes das melhorias de peso astrológico (eixos-chave, conjunção neutra,
+  // desconto geracional, planeta+casa combinados) esse valor era 2.6 — precisava
+  // "inflar" a diferença porque o modelo em si gerava pouca variação. Agora que o
+  // próprio cálculo já produz mais diferenciação real entre categorias, um stretch
+  // menor evita exagerar (e travar em 1% duas categorias em relatórios pequenos).
+  const STRETCH = CALIBRATION.categoryStretch;
+  const stretched = {};
+  for (const k in rawPct) stretched[k] = Math.max(1, 25 + (rawPct[k]-25)*STRETCH);
+  const stretchSum = Object.values(stretched).reduce((a,b)=>a+b,0);
+  const pct = {};
+  for (const k in stretched) pct[k] = stretched[k]/stretchSum*100;
+
+  const harmonyRaw = (harmoniousW+tenseW) > 0 ? (harmoniousW/(harmoniousW+tenseW)*100) : 50;
+  const harmonyPct = Math.min(95, Math.max(5, 50 + (harmonyRaw-50)*CALIBRATION.harmonyStretch));
+
+  // mesma fórmula de stretch/clamp do harmonyPct geral, aplicada só ao sub-pool de um
+  // eixo. Retorna null se o pool não tiver aspectos suficientes (CALIBRATION.
+  // minAspectsPerAxis) — com 1-2 aspectos isolados o número seria mais ruído que sinal,
+  // então preferimos não mostrar a mostrar uma falsa precisão.
+  function poolHarmonyPct(hW, tW, eligibleCount){
+    if (eligibleCount < CALIBRATION.minAspectsPerAxis) return null;
+    if (hW + tW <= 0) return null;
+    const raw = hW/(hW+tW)*100;
+    return Math.round(Math.min(95, Math.max(5, 50 + (raw-50)*CALIBRATION.harmonyStretch)));
+  }
+  const immediateHarmonyPct = poolHarmonyPct(immediateHarmoniousW, immediateTenseW, immediateEligibleCount);
+  const structureHarmonyPct = poolHarmonyPct(structureHarmoniousW, structureTenseW, structureEligibleCount);
+
+  // Compatibilidade Geral: NÃO é a média aritmética dos dois eixos — média aritmética
+  // deixaria um eixo forte "carregar" o outro fraco (ex: 90 imediato + 20 estrutura =
+  // 55, parecendo "razoável" quando na real é um par bom só numa das duas frentes).
+  // Média geométrica pune mais o desequilíbrio: só fica alta quando os DOIS eixos são
+  // razoavelmente bons, e cai mais rápido quando um deles é fraco.
+  const compatibilityScore = (immediateHarmonyPct !== null && structureHarmonyPct !== null)
+    ? Math.round(Math.sqrt(immediateHarmonyPct * structureHarmonyPct))
+    : null;
+
+  // força: % de aspectos muito exatos (orbe < 2°), não a soma bruta — evita saturar em 100 sempre
+  // (exclui aspectos outer-outer, que são geracionais e não dizem muito sobre o vínculo pessoal)
+  const tightRatio = strengthEligibleCount ? (tightCount/strengthEligibleCount*100) : 0;
+  const strength = Math.min(100, Math.round(tightRatio * 2.3));
+
+  const { houseConvergenceContacts, houseConvergenceDetails } = computeHouseConvergence(parsed.houses);
+
+  return {
+    pct, harmonyPct: Math.round(harmonyPct), strength,
+    immediateHarmonyPct, structureHarmonyPct, compatibilityScore,
+    saturnCommitmentContacts, saturnCommitmentHarmonic, saturnCommitmentAmbivalent, saturnCommitmentTense, saturnCommitmentDetails,
+    nodeDestinyContacts, nodeDestinyHarmonic, nodeDestinyAmbivalent, nodeDestinyTense, nodeDestinyDetails,
+    nodeAxisContacts, nodeAxisHarmonic, nodeAxisAmbivalent, nodeAxisTense, nodeAxisDetails,
+    vertexFatedContacts, vertexFatedHarmonic, vertexFatedAmbivalent, vertexFatedTense, vertexFatedDetails,
+    chironWoundContacts, chironWoundHarmonic, chironWoundAmbivalent, chironWoundTense, chironWoundDetails,
+    lilithMagneticContacts, lilithMagneticHarmonic, lilithMagneticAmbivalent, lilithMagneticTense, lilithMagneticDetails,
+    houseConvergenceContacts, houseConvergenceDetails,
+  };
+}
+
+// Rótulos e textos abaixo variam por tipo de vínculo (romantico/amizade/familia) — é
+// só uma camada de texto por cima do MESMO cálculo (PLANET_PROFILE, aspectos, pesos
+// etc. não mudam). A ideia: os aspectos medem intensidade/magnetismo entre duas pessoas
+// independente da natureza do vínculo, mas "Sexual/Paixão" e um texto sobre "ficada" não
+// fazem sentido nenhum quando a sinastria é entre amigos ou parentes — então trocamos só
+// o vocabulário, mantendo os números e a estrutura da leitura intactos.
+const REL_TYPE_LABEL_PT = { romantico:'Romântico', amizade:'Amizade', familia:'Família' };
+
+const PAIR_INFO_BY_TYPE = {
+  romantico: {
+    'emocional+sexual': {
+      title: 'Paixão com Vínculo Afetivo',
+      tenseTitle: 'Paixão Intensa e Turbulenta',
+      harm: 'afeto e desejo caminham juntos, e a maior parte flui sem muito atrito — combinação clássica de paixão que também acolhe. Tem potencial tanto pra uma ficada gostosa quanto pro início de algo sério, dependendo do que vocês escolherem construir.',
+      tense: 'afeto e desejo dominam, mas vêm carregados de tensão — o tipo de química intensa e um pouco instável, que pode ser marcante e também desgastante ao mesmo tempo.'
+    },
+    'emocional+pratico': {
+      title: 'Base Sólida',
+      tenseTitle: 'Vínculo com Peso',
+      harm: 'tem afeto genuíno e uma estrutura prática consistente — o perfil típico de quem constrói uma relação de longo prazo, mesmo que a faísca sexual não seja o ponto mais forte do mapa.',
+      tense: 'afeto e senso de responsabilidade mútua aparecem fortes, mas com bastante fricção — relação com cara de "time" ou de "família", que também gera atrito recorrente.'
+    },
+    'emocional+intelectual': {
+      title: 'Amizade Profunda',
+      tenseTitle: 'Cumplicidade com Atrito',
+      harm: 'mente e coração conversam muito mais do que o corpo aqui — afinidade genuína, do tipo que gera amizade profunda ou intimidade emocional forte, com pouca faísca romântica no radar.',
+      tense: 'há entendimento emocional e mental de verdade, mas com atrito misturado — o tipo de vínculo em que vocês se entendem bem e também discutem bastante.'
+    },
+    'sexual+pratico': {
+      title: 'Atração com Chão',
+      tenseTitle: 'Atração Complicada',
+      harm: 'desejo físico e senso prático de parceria caminham juntos — uma atração que não é só fogo passageiro, tem estrutura por trás.',
+      tense: 'desejo físico forte, mas junto de tensão estrutural — atração que costuma esbarrar em choques de ritmo ou de estilo de vida.'
+    },
+    'sexual+intelectual': {
+      title: 'Química Estimulante',
+      tenseTitle: 'Provocação Mútua',
+      harm: 'tesão e boas conversas dominam — combinação estimulante tanto na cama quanto fora dela, ótima pra uma ficada ou pro início de um romance.',
+      tense: 'desejo e estímulo mental fortes, com boa dose de provocação e atrito — química picante, mas nem sempre tranquila.'
+    },
+    'intelectual+pratico': {
+      title: 'Parceria Funcional',
+      tenseTitle: 'Competência com Atrito',
+      harm: 'vocês formam um bom time — conversa afiada e senso prático de organização. Tem mais cara de parceria funcional (de projeto, de casa, de vida) do que de romance ardente.',
+      tense: 'há competência mútua reconhecida, mas com bastante atrito na hora de decidir e organizar as coisas juntos.'
+    },
+  },
+  amizade: {
+    'emocional+sexual': {
+      title: 'Amizade Intensa e Presente',
+      tenseTitle: 'Amizade Marcante e Turbulenta',
+      harm: 'afeto e intensidade caminham juntos, e a maior parte flui sem muito atrito — o tipo de amizade forte, presente, que ocupa espaço de verdade na vida de vocês duas.',
+      tense: 'afeto e intensidade dominam, mas vêm carregados de tensão — uma amizade magnética, cheia de admiração, mas também com atrito e idas e vindas.'
+    },
+    'emocional+pratico': {
+      title: 'Base Sólida',
+      tenseTitle: 'Vínculo com Peso',
+      harm: 'tem afeto genuíno e uma estrutura prática consistente — o perfil de uma amizade que dura, com espaço real pra se apoiarem uma na outra.',
+      tense: 'afeto e senso de responsabilidade mútua aparecem fortes, mas com bastante fricção — amizade com cara de "time" ou de "família escolhida", que também gera atrito recorrente.'
+    },
+    'emocional+intelectual': {
+      title: 'Amizade Profunda',
+      tenseTitle: 'Cumplicidade com Atrito',
+      harm: 'mente e coração conversam muito — afinidade genuína, do tipo que gera intimidade emocional forte e conversas que vão fundo de verdade.',
+      tense: 'há entendimento emocional e mental de verdade, mas com atrito misturado — o tipo de amizade em que vocês se entendem bem e também discutem bastante.'
+    },
+    'sexual+pratico': {
+      title: 'Presença com Chão',
+      tenseTitle: 'Presença Complicada',
+      harm: 'intensidade e senso prático de parceria caminham juntos — uma amizade que não é só admiração passageira, tem estrutura por trás.',
+      tense: 'intensidade forte, mas junto de tensão estrutural — amizade que costuma esbarrar em choques de ritmo ou de estilo de vida.'
+    },
+    'sexual+intelectual': {
+      title: 'Troca Estimulante',
+      tenseTitle: 'Provocação Mútua',
+      harm: 'energia e boas conversas dominam — combinação estimulante, do tipo que rende risada, debate e trocas que carregam.',
+      tense: 'intensidade e estímulo mental fortes, com boa dose de provocação e atrito — amizade vibrante, mas nem sempre tranquila.'
+    },
+    'intelectual+pratico': {
+      title: 'Parceria Funcional',
+      tenseTitle: 'Competência com Atrito',
+      harm: 'vocês formam um bom time — conversa afiada e senso prático de organização. Tem cara de parceria de verdade (de projeto, de casa, de vida).',
+      tense: 'há competência mútua reconhecida, mas com bastante atrito na hora de decidir e organizar as coisas juntas.'
+    },
+  },
+  familia: {
+    'emocional+sexual': {
+      title: 'Vínculo Intenso e Presente',
+      tenseTitle: 'Vínculo Marcante e Turbulento',
+      harm: 'afeto e intensidade caminham juntos, e a maior parte flui sem muito atrito — o tipo de laço familiar forte e presente, que pesa (no bom sentido) na vida de vocês.',
+      tense: 'afeto e intensidade dominam, mas vêm carregados de tensão — um vínculo magnético, mas também com bastante atrito e altos e baixos.'
+    },
+    'emocional+pratico': {
+      title: 'Base Sólida',
+      tenseTitle: 'Vínculo com Peso',
+      harm: 'tem afeto genuíno e uma estrutura prática consistente — o perfil de um laço familiar que se mantém firme com o tempo.',
+      tense: 'afeto e senso de responsabilidade mútua aparecem fortes, mas com bastante fricção — vínculo com cara de obrigação e cuidado misturados, que também gera atrito recorrente.'
+    },
+    'emocional+intelectual': {
+      title: 'Cumplicidade Profunda',
+      tenseTitle: 'Cumplicidade com Atrito',
+      harm: 'mente e coração conversam muito — afinidade genuína, do tipo que gera intimidade emocional forte entre vocês.',
+      tense: 'há entendimento emocional e mental de verdade, mas com atrito misturado — vocês se entendem bem e também discutem bastante.'
+    },
+    'sexual+pratico': {
+      title: 'Presença com Chão',
+      tenseTitle: 'Presença Complicada',
+      harm: 'intensidade e senso prático de convivência caminham juntos — um laço com estrutura real por trás.',
+      tense: 'intensidade forte, mas junto de tensão estrutural — vínculo que costuma esbarrar em choques de ritmo ou de jeito de viver.'
+    },
+    'sexual+intelectual': {
+      title: 'Troca Estimulante',
+      tenseTitle: 'Provocação Mútua',
+      harm: 'energia e boas conversas dominam — trocas que rendem debate e cumplicidade.',
+      tense: 'intensidade e estímulo mental fortes, com boa dose de provocação e atrito — vínculo vivo, mas nem sempre tranquilo.'
+    },
+    'intelectual+pratico': {
+      title: 'Parceria Funcional',
+      tenseTitle: 'Competência com Atrito',
+      harm: 'vocês formam um bom time — conversa afiada e senso prático de organização, cara de parceria de verdade dentro da família.',
+      tense: 'há competência mútua reconhecida, mas com bastante atrito na hora de decidir e organizar as coisas juntas.'
+    },
+  },
+};
+
+// Texto do caso especial de dominância extrema de "Sexual/Intensidade" — também varia
+// por tipo de vínculo (evita falar em "ficada"/"romance" quando o vínculo é amizade/família).
+const EXTREME_TEXT_BY_TYPE = {
+  romantico: {
+    harmonicTitle: 'Química forte — Ficada ou Amizade Colorida',
+    tenseTitle: 'Paixão Turbulenta',
+    harmonicFlavor: (S, h) => `atração física domina o mapa (Sexual em ${S.toFixed(0)}%), e de forma fluida — harmonia em ${h}%. É o tipo de conexão em que o corpo entende antes da cabeça: ótima pra uma ficada ou amizade colorida saudável, mesmo sem virar algo sério.`,
+    tenseFlavor: (S, h) => `atração física domina o mapa (Sexual em ${S.toFixed(0)}%), mas cercada de tensão — harmonia de só ${h}%. Atração magnética e um pouco desestabilizadora, mais intensa do que estável.`,
+  },
+  amizade: {
+    harmonicTitle: 'Magnetismo Forte — Amizade Intensa',
+    tenseTitle: 'Magnetismo Turbulento',
+    harmonicFlavor: (S, h) => `intensidade domina o mapa (${S.toFixed(0)}%), e de forma fluida — harmonia em ${h}%. É o tipo de amizade em que a conexão é imediata e magnética, sem depender de esforço nenhum dos dois lados.`,
+    tenseFlavor: (S, h) => `intensidade domina o mapa (${S.toFixed(0)}%), mas cercada de tensão — harmonia de só ${h}%. Conexão magnética e um pouco desestabilizadora, mais intensa do que estável.`,
+  },
+  familia: {
+    harmonicTitle: 'Vínculo Magnético',
+    tenseTitle: 'Vínculo Turbulento',
+    harmonicFlavor: (S, h) => `intensidade domina o mapa (${S.toFixed(0)}%), e de forma fluida — harmonia em ${h}%. Um laço com presença forte e natural entre vocês, do tipo que não precisa de esforço pra se fazer sentir.`,
+    tenseFlavor: (S, h) => `intensidade domina o mapa (${S.toFixed(0)}%), mas cercada de tensão — harmonia de só ${h}%. Vínculo magnético e um pouco desestabilizador, mais intenso do que estável.`,
+  },
+};
+
+function classify(pct, harmonyPct, strength, relType, immediateHarmonyPct, structureHarmonyPct){
+  relType = PAIR_INFO_BY_TYPE[relType] ? relType : 'romantico';
+  const catMeta = catMetaFor(relType);
+  const I = pct.intelectual, E = pct.emocional, S = pct.sexual, P = pct.pratico;
+  const avgOthers = (a,b,c) => (a+b+c)/3;
+
+  // Compatibilidade Geral agrega Imediato x Estrutura numa média geométrica (ver
+  // computeScores) — quando os dois eixos têm dados suficientes e estão bem
+  // desequilibrados entre si, isso é informação real que o harmonyPct/pct sozinhos não
+  // capturam (ver discussão no chat: um par pode ter harmonia geral "ok" enquanto a
+  // tensão está concentrada bem onde mais importa pra um dos dois tipos de vínculo).
+  // Sinalizamos isso como uma frase extra no texto, no mesmo padrão do mixedNote abaixo.
+  let imbalanceNote = '';
+  if (immediateHarmonyPct !== null && immediateHarmonyPct !== undefined &&
+      structureHarmonyPct !== null && structureHarmonyPct !== undefined){
+    const diff = immediateHarmonyPct - structureHarmonyPct;
+    if (Math.abs(diff) >= CALIBRATION.imbalanceThreshold){
+      imbalanceNote = diff > 0
+        ? ` Atenção: essa conexão puxa bem mais forte pro lado imediato — pegação, faísca, reconhecimento físico (${immediateHarmonyPct}%) — do que pra estrutura de longo prazo (${structureHarmonyPct}%). Pode ser ótima paixão ou o início de algo gostoso, mas os sinais de sustentação no tempo são mais frágeis do que a leitura geral sugere.`
+        : ` Atenção: essa conexão tem bem mais estrutura de longo prazo (${structureHarmonyPct}%) do que faísca imediata (${immediateHarmonyPct}%). Tende a ser uma boa base pra construir algo sólido, mas com menos combustão nos primeiros momentos.`;
+    }
+  }
+
+  // A leitura harmônica/tensa não é um corte binário em 55%: dentro de
+  // CALIBRATION.harmonyZone tratamos como uma faixa MISTA — real na prática, já que
+  // 54.9% e 55.1% de harmonia não representam vínculos categoricamente diferentes.
+  // 'harmonic' ainda escolhe um lado do texto (o majoritário, >=50%) mesmo dentro da
+  // zona mista, mas o texto sinaliza explicitamente quando a leitura é intermediária
+  // em vez de apresentar uma certeza que o número não sustenta.
+  const { low, high } = CALIBRATION.harmonyZone;
+  const harmonic = harmonyPct >= 50;
+  const isMixedZone = harmonyPct > low && harmonyPct < high;
+  const mixedNote = ' A leitura de harmonia aqui está numa faixa intermediária — nem totalmente fluida, nem totalmente tensa; convivem fricção real e momentos de fluidez, sem um dos dois dominar claramente.';
+
+  if (strength < 15 && harmonyPct > 40 && harmonyPct < 60){
+    return {
+      title: "Conexão sutil",
+      desc: `Poucos aspectos bem exatos ligam essas duas cartas — não há uma carga astrológica muito concentrada em nenhuma direção específica (harmonia em ${Math.round(harmonyPct)}%). Pode ser um vínculo mais leve ou ainda pouco explorado.`
+    };
+  }
+
+  // dominância extrema de Sexual/Intensidade — caso especial, texto varia por relType
+  if (S - avgOthers(I,E,P) > 13){
+    const ext = EXTREME_TEXT_BY_TYPE[relType];
+    const title = harmonic ? ext.harmonicTitle : ext.tenseTitle;
+    let flavor = harmonic
+      ? ext.harmonicFlavor(S, Math.round(harmonyPct))
+      : ext.tenseFlavor(S, Math.round(harmonyPct));
+    let desc = capitalize(flavor);
+    if (isMixedZone) desc += mixedNote;
+    desc += imbalanceNote;
+    return { title, desc };
+  }
+
+  // as duas categorias mais fortes definem o "tema" central da conexão
+  const sorted = Object.entries(pct).sort((a,b)=>b[1]-a[1]);
+  const [topKey, topVal] = sorted[0];
+  const [secondKey, secondVal] = sorted[1];
+  const [thirdKey, thirdVal] = sorted[2];
+  const [bottomKey, bottomVal] = sorted[3];
+  const pairKey = [topKey, secondKey].sort().join('+');
+  const info = PAIR_INFO_BY_TYPE[relType][pairKey];
+
+  // fora da zona mista, um segundo degrau controla o sufixo de intensidade — mas agora
+  // simétrico (existia só pro lado tenso antes; o lado bem harmônico também ganha nota)
+  const extremeSuffix = harmonyPct <= CALIBRATION.strongTenseThreshold ? ' (bastante tensa)'
+    : harmonyPct >= CALIBRATION.strongHarmonicThreshold ? ' (fluindo bastante)'
+    : '';
+  const title = (harmonic ? info.title : info.tenseTitle) + extremeSuffix;
+  const bodyFlavor = harmonic ? info.harm : info.tense;
+
+  let desc = `${catMeta[topKey].label} (${topVal.toFixed(0)}%) e ${catMeta[secondKey].label} (${secondVal.toFixed(0)}%) puxam a maior parte dessa conexão — ${bodyFlavor} ${catMeta[bottomKey].label} fica em último (${bottomVal.toFixed(0)}%), sinal de que isso não é o centro de gravidade do vínculo.`;
+
+  // se a 2ª e a 3ª categoria estão muito próximas, o "tema" escolhido é menos decisivo
+  // do que o texto sozinho sugere — sinalizamos isso em vez de tratar como resolvido
+  if (secondVal - thirdVal < CALIBRATION.nearTiePctGap){
+    desc += ` ${catMeta[thirdKey].label} vem logo atrás, em ${thirdVal.toFixed(0)}% — a diferença é pequena, então esse tema secundário também tem peso real no vínculo.`;
+  }
+
+  if (isMixedZone) desc += mixedNote;
+  desc += imbalanceNote;
+
+  return { title, desc };
+}
+
+function capitalize(s){ return s.charAt(0).toUpperCase() + s.slice(1); }
+
+const CAT_META = {
+  intelectual: { label:'Intelectual', color:'var(--violet)' },
+  emocional:   { label:'Emocional',   color:'var(--rose)'   },
+  sexual:      { label:'Sexual / Paixão', color:'#d4534f' },
+  pratico:     { label:'Prático / Compromisso', color:'var(--teal)' },
+};
+
+// Só o rótulo da categoria "sexual" muda por tipo de vínculo — cor e as outras 3
+// categorias ficam iguais. O cálculo (PLANET_PROFILE etc.) nunca muda, só o texto.
+const SEXUAL_LABEL_BY_TYPE = {
+  romantico: 'Sexual / Paixão',
+  amizade:   'Intensidade / Magnetismo',
+  familia:   'Intensidade / Proximidade',
+};
+function catMetaFor(relType){
+  return {
+    ...CAT_META,
+    sexual: { ...CAT_META.sexual, label: SEXUAL_LABEL_BY_TYPE[relType] || CAT_META.sexual.label },
+  };
+}
+
+// ---------- Comparação entre sinastrias ----------
+const COMPARE_KEY = 'sinastria_comparisons_v1';
+
+let storageAvailable = true;
+try {
+  const testKey = '__sinastria_storage_test__';
+  localStorage.setItem(testKey, '1');
+  localStorage.removeItem(testKey);
+} catch(e){ storageAvailable = false; }
+if (!storageAvailable){
+  document.getElementById('storageWarning').style.display = 'flex';
+}
+
+let comparisons = [];
+try { comparisons = storageAvailable ? (JSON.parse(localStorage.getItem(COMPARE_KEY)) || []) : []; } catch(e){ comparisons = []; }
+
+function saveComparisons(){
+  if (!storageAvailable) return;
+  try { localStorage.setItem(COMPARE_KEY, JSON.stringify(comparisons)); } catch(e){ /* storage indisponível, segue só em memória */ }
+}
+
+let editingId = null;
+
+function addComparison(entry){
+  comparisons.push(entry);
+  saveComparisons();
+  renderComparisons();
+}
+
+function updateComparison(id, data){
+  const idx = comparisons.findIndex(c => c.id === id);
+  if (idx === -1){
+    // entrada sumiu (ex: removida em outra aba) — salva como nova mesmo assim
+    addComparison({ id: Date.now(), ts: Date.now(), ...data });
+    return;
+  }
+  comparisons[idx] = { ...comparisons[idx], ...data, ts: Date.now() };
+  saveComparisons();
+  renderComparisons();
+}
+
+function removeComparison(id){
+  comparisons = comparisons.filter(c => c.id !== id);
+  saveComparisons();
+  renderComparisons();
+  if (editingId === id) exitEditMode();
+}
+
+function startEdit(id){
+  const c = comparisons.find(x => x.id === id);
+  if (!c) return;
+  editingId = id;
+
+  const viewBannerEl = document.getElementById('viewBanner');
+  viewBannerEl.style.display = 'none';
+  viewBannerEl.innerHTML = '';
+
+  document.getElementById('name1').value = c.n1;
+  document.getElementById('name2').value = c.n2;
+  document.getElementById('relType').value = c.relType || 'romantico';
+  document.getElementById('raw').value = c.raw || '';
+  document.getElementById('errorMsg').style.display = 'none';
+  document.getElementById('calcBtn').textContent = 'Salvar alterações';
+
+  const banner = document.getElementById('editBanner');
+  banner.innerHTML = `<span>Editando a sinastria de <strong>${escapeHtml(c.n1)} &amp; ${escapeHtml(c.n2)}</strong> — ao calcular, essa entrada será atualizada em vez de criar uma nova.</span>`;
+  const cancelBtn = document.createElement('button');
+  cancelBtn.type = 'button';
+  cancelBtn.className = 'ghost-btn';
+  cancelBtn.textContent = 'Cancelar edição';
+  cancelBtn.addEventListener('click', exitEditMode);
+  banner.appendChild(cancelBtn);
+  banner.style.display = 'flex';
+
+  document.getElementById('raw').scrollIntoView({ behavior:'smooth', block:'center' });
+}
+
+function exitEditMode(){
+  editingId = null;
+  document.getElementById('calcBtn').textContent = 'Calcular sinastria';
+  const banner = document.getElementById('editBanner');
+  banner.style.display = 'none';
+  banner.innerHTML = '';
+}
+
+function sortedComparisons(){
+  const mode = document.getElementById('sortBy').value;
+  const list = comparisons.slice();
+  // entradas sem compatibilityScore calculado (ou vindas de antes dessa métrica existir)
+  // vão pro final da lista em vez de quebrar a ordenação com null/undefined
+  if (mode === 'compatibility') list.sort((a,b)=> (b.compatibilityScore ?? -1) - (a.compatibilityScore ?? -1));
+  else if (mode === 'harmony') list.sort((a,b)=> b.harmonyPct - a.harmonyPct);
+  else if (mode === 'strength') list.sort((a,b)=> b.strength - a.strength);
+  else if (mode === 'markers') list.sort((a,b)=>
+    ((b.saturnCommitmentContacts||0)+(b.nodeDestinyContacts||0)+(b.nodeAxisContacts||0)+(b.vertexFatedContacts||0)+(b.chironWoundContacts||0)+(b.lilithMagneticContacts||0)) - ((a.saturnCommitmentContacts||0)+(a.nodeDestinyContacts||0)+(a.nodeAxisContacts||0)+(a.vertexFatedContacts||0)+(a.chironWoundContacts||0)+(a.lilithMagneticContacts||0))
+  );
+  else list.sort((a,b)=> b.ts - a.ts);
+  return list;
+}
+
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+}
+
+function renderComparisons(){
+  const container = document.getElementById('compareList');
+  const list = sortedComparisons();
+  const mode = document.getElementById('sortBy').value;
+
+  if (list.length === 0){
+    container.innerHTML = '<div class="compare-empty">Nenhuma sinastria calculada ainda. Calcule a primeira acima pra começar a comparação.</div>';
+    return;
+  }
+
+  const order = ['emocional','sexual','intelectual','pratico'];
+  const grid = document.createElement('div');
+  grid.className = 'compare-grid';
+
+  list.forEach((c, idx) => {
+    const isTop = idx === 0 && (mode === 'compatibility' || mode === 'harmony' || mode === 'strength' || mode === 'markers') && list.length > 1
+      && !(mode === 'compatibility' && c.compatibilityScore == null);
+    const card = document.createElement('div');
+    card.className = 'compare-card' + (isTop ? ' top-pick' : '');
+
+    const badgeText = isTop
+      ? (mode === 'compatibility' ? '★ Maior compatibilidade do grupo' : mode === 'harmony' ? '★ Maior harmonia do grupo' : mode === 'strength' ? '★ Conexão mais forte do grupo' : '★ Mais marcadores do grupo')
+      : `${c.aspectsCount} aspectos · ${c.housesCount} casas`;
+
+    const cRelType = c.relType || 'romantico';
+    const cCatMeta = catMetaFor(cRelType);
+    const barsHtml = order.map(key => {
+      const meta = cCatMeta[key];
+      const val = c.pct[key];
+      return `
+        <div class="mini-bar-row">
+          <div class="top">
+            <span class="cat-name"><span class="dot" style="background:${meta.color}"></span>${meta.label}</span>
+            <span>${val.toFixed(0)}%</span>
+          </div>
+          <div class="mini-bar-track"><div class="mini-bar-fill" style="width:${val}%; background:${meta.color}"></div></div>
+        </div>`;
+    }).join('');
+
+    const cSaturn = c.saturnCommitmentContacts || 0;
+    const cNode = c.nodeDestinyContacts || 0;
+    const cNodeAxis = c.nodeAxisContacts || 0;
+    const cVertex = c.vertexFatedContacts || 0;
+    const cChiron = c.chironWoundContacts || 0;
+    const cLilith = c.lilithMagneticContacts || 0;
+    const cHouses = c.houseConvergenceContacts || 0;
+    const markersHtml = (cSaturn > 0 || cNode > 0 || cNodeAxis > 0 || cVertex > 0 || cChiron > 0 || cLilith > 0 || cHouses > 0) ? `
+      <div class="cmarkers">
+        ${cSaturn > 0 ? `<details class="cmarker saturn" name="cm-${c.id}"><summary>♄ Saturno · ${cSaturn}${markerBreakdown(c.saturnCommitmentHarmonic||0, c.saturnCommitmentAmbivalent||0, c.saturnCommitmentTense||0)}</summary><div class="cmarker-detail">${escapeHtml((c.saturnCommitmentDetails||[]).join('\n'))}</div></details>` : ''}
+        ${cNode > 0 ? `<details class="cmarker node" name="cm-${c.id}"><summary>☊ Nodo · ${cNode}${markerBreakdown(c.nodeDestinyHarmonic||0, c.nodeDestinyAmbivalent||0, c.nodeDestinyTense||0)}</summary><div class="cmarker-detail">${escapeHtml((c.nodeDestinyDetails||[]).join('\n'))}</div></details>` : ''}
+        ${cNodeAxis > 0 ? `<details class="cmarker node" name="cm-${c.id}"><summary>☊☊ Nodo · eixo mútuo ${cNodeAxis}${markerBreakdown(c.nodeAxisHarmonic||0, c.nodeAxisAmbivalent||0, c.nodeAxisTense||0)}</summary><div class="cmarker-detail">${escapeHtml((c.nodeAxisDetails||[]).join('\n'))}</div></details>` : ''}
+        ${cVertex > 0 ? `<details class="cmarker vertex" name="cm-${c.id}"><summary>✧ Vértice · ${cVertex}${markerBreakdown(c.vertexFatedHarmonic||0, c.vertexFatedAmbivalent||0, c.vertexFatedTense||0)}</summary><div class="cmarker-detail">${escapeHtml((c.vertexFatedDetails||[]).join('\n'))}</div></details>` : ''}
+        ${cChiron > 0 ? `<details class="cmarker chiron" name="cm-${c.id}"><summary>⚷ Quíron ${cChiron}${markerBreakdown(c.chironWoundHarmonic||0, c.chironWoundAmbivalent||0, c.chironWoundTense||0)}</summary><div class="cmarker-detail">${escapeHtml((c.chironWoundDetails||[]).join('\n'))}</div></details>` : ''}
+        ${cLilith > 0 ? `<details class="cmarker lilith" name="cm-${c.id}"><summary>⚸ Lilith ${cLilith}${markerBreakdown(c.lilithMagneticHarmonic||0, c.lilithMagneticAmbivalent||0, c.lilithMagneticTense||0)}</summary><div class="cmarker-detail">${escapeHtml((c.lilithMagneticDetails||[]).join('\n'))}</div></details>` : ''}
+        ${cHouses > 0 ? `<details class="cmarker houses" name="cm-${c.id}"><summary>⌂ Casas · ${cHouses}</summary><div class="cmarker-detail">${escapeHtml((c.houseConvergenceDetails||[]).join('\n'))}</div></details>` : ''}
+      </div>` : '';
+
+    const compatDisplay = c.compatibilityScore != null ? c.compatibilityScore + '%' : '—';
+    const immediateDisplay = c.immediateHarmonyPct != null ? c.immediateHarmonyPct + '%' : '—';
+    const structureDisplay = c.structureHarmonyPct != null ? c.structureHarmonyPct + '%' : '—';
+    const harmonyDisplay = c.harmonyPct != null ? c.harmonyPct + '%' : '—';
+
+    card.innerHTML = `
+      <div class="card-actions">
+        <button type="button" class="icon-btn view-btn" data-id="${c.id}" title="Ver detalhes completos">👁</button>
+        <button type="button" class="icon-btn recalc-btn" data-id="${c.id}" title="Recalcular com a lógica atual">⟳</button>
+        <button type="button" class="icon-btn edit-btn" data-id="${c.id}" title="Editar esta sinastria">✎</button>
+        <button type="button" class="icon-btn remove-btn" data-id="${c.id}" title="Remover desta comparação">×</button>
+      </div>
+      <div class="badge">${escapeHtml(badgeText)}</div>
+      <div class="cnames">${escapeHtml(c.n1)}<span class="amp">&amp;</span>${escapeHtml(c.n2)}</div>
+      <div class="cverdict">${escapeHtml(c.verdictTitle)} <span style="color:var(--muted); font-weight:400;">· ${escapeHtml(REL_TYPE_LABEL_PT[cRelType])}</span></div>
+      ${markersHtml}
+      <div class="mini-bars">${barsHtml}</div>
+      <div class="cstats">
+        <div class="cstat"><div class="val">${c.strength}</div><div class="lbl">Força</div></div>
+        <div class="cstat"><div class="val">${harmonyDisplay}</div><div class="lbl">Harmonia</div></div>
+        <div class="cstat cstat-highlight"><div class="val">${compatDisplay}</div><div class="lbl">Compat.</div></div>
+        <div class="cstat"><div class="val">${immediateDisplay}</div><div class="lbl">Pegç.</div></div>
+        <div class="cstat"><div class="val">${structureDisplay}</div><div class="lbl">Estrut.</div></div>
+      </div>
+    `;
+    grid.appendChild(card);
+  });
+
+  container.innerHTML = '';
+  container.appendChild(grid);
+
+  container.querySelectorAll('.remove-btn').forEach(btn => {
+    btn.addEventListener('click', () => removeComparison(Number(btn.dataset.id)));
+  });
+  container.querySelectorAll('.edit-btn').forEach(btn => {
+    btn.addEventListener('click', () => startEdit(Number(btn.dataset.id)));
+  });
+  container.querySelectorAll('.recalc-btn').forEach(btn => {
+    btn.addEventListener('click', () => recalcOne(Number(btn.dataset.id)));
+  });
+  container.querySelectorAll('.view-btn').forEach(btn => {
+    btn.addEventListener('click', () => viewComparison(Number(btn.dataset.id)));
+  });
+}
+
+// Reaplica parseText + computeScores + classify em cima do texto original (c.raw) já
+// salvo — sem isso, uma sinastria calculada antes de um ajuste na CALIBRATION ou no
+// classify() fica com número/veredito desatualizado pra sempre, mesmo que a lógica do
+// app tenha mudado depois (ex: um título "tenso" salvo que hoje, com a mesma harmonia,
+// seria classificado como "harmônico"). Retorna null se não der pra recalcular (texto
+// original ausente — entradas bem antigas podem não ter c.raw — ou texto irreconhecível).
+function recalcEntry(c){
+  if (!c.raw) return null;
+  const parsed = parseText(c.raw);
+  if (parsed.aspects.length === 0) return null;
+  const {
+    pct, harmonyPct, strength,
+    immediateHarmonyPct, structureHarmonyPct, compatibilityScore,
+    saturnCommitmentContacts, saturnCommitmentHarmonic, saturnCommitmentAmbivalent, saturnCommitmentTense, saturnCommitmentDetails,
+    nodeDestinyContacts, nodeDestinyHarmonic, nodeDestinyAmbivalent, nodeDestinyTense, nodeDestinyDetails,
+    nodeAxisContacts, nodeAxisHarmonic, nodeAxisAmbivalent, nodeAxisTense, nodeAxisDetails,
+    vertexFatedContacts, vertexFatedHarmonic, vertexFatedAmbivalent, vertexFatedTense, vertexFatedDetails,
+    chironWoundContacts, chironWoundHarmonic, chironWoundAmbivalent, chironWoundTense, chironWoundDetails,
+    lilithMagneticContacts, lilithMagneticHarmonic, lilithMagneticAmbivalent, lilithMagneticTense, lilithMagneticDetails,
+    houseConvergenceContacts, houseConvergenceDetails,
+  } = computeScores(parsed);
+  const verdict = classify(pct, harmonyPct, strength, c.relType || 'romantico', immediateHarmonyPct, structureHarmonyPct);
+  return {
+    pct, harmonyPct, strength,
+    immediateHarmonyPct, structureHarmonyPct, compatibilityScore,
+    verdictTitle: verdict.title,
+    aspectsCount: parsed.aspects.length,
+    housesCount: parsed.houses.length,
+    saturnCommitmentContacts, saturnCommitmentHarmonic, saturnCommitmentAmbivalent, saturnCommitmentTense, saturnCommitmentDetails,
+    nodeDestinyContacts, nodeDestinyHarmonic, nodeDestinyAmbivalent, nodeDestinyTense, nodeDestinyDetails,
+    nodeAxisContacts, nodeAxisHarmonic, nodeAxisAmbivalent, nodeAxisTense, nodeAxisDetails,
+    vertexFatedContacts, vertexFatedHarmonic, vertexFatedAmbivalent, vertexFatedTense, vertexFatedDetails,
+    chironWoundContacts, chironWoundHarmonic, chironWoundAmbivalent, chironWoundTense, chironWoundDetails,
+    lilithMagneticContacts, lilithMagneticHarmonic, lilithMagneticAmbivalent, lilithMagneticTense, lilithMagneticDetails,
+    houseConvergenceContacts, houseConvergenceDetails,
+  };
+}
+
+function recalcOne(id){
+  const idx = comparisons.findIndex(c => c.id === id);
+  if (idx === -1) return;
+  const updated = recalcEntry(comparisons[idx]);
+  if (!updated){
+    alert('Não foi possível recalcular esta entrada — falta o texto original salvo, ou ele não é mais reconhecido pelo formato atual.');
+    return;
+  }
+  comparisons[idx] = { ...comparisons[idx], ...updated, ts: comparisons[idx].ts };
+  saveComparisons();
+  renderComparisons();
+}
+
+// Mostra o painel de resultado completo pra uma entrada já salva, usando só os campos
+// que já estão guardados em `c` (sem reprocessar c.raw, sem entrar em modo de edição).
+// Existe porque o card no grid de comparação é compacto por design — não tem espaço pra
+// descrição do veredito, os 4 stats completos, nem o detalhe de cada marcador — e esse
+// painel (o mesmo usado logo após calcular) já sabe mostrar tudo isso.
+function viewComparison(id){
+  const c = comparisons.find(x => x.id === id);
+  if (!c) return;
+  const relType = c.relType || 'romantico';
+  const catMeta = catMetaFor(relType);
+
+  const banner = document.getElementById('viewBanner');
+  banner.innerHTML = `<span>Visualizando os detalhes salvos de <strong>${escapeHtml(c.n1)} &amp; ${escapeHtml(c.n2)}</strong> — estes números são os que foram salvos, não um recálculo ao vivo.</span>`;
+  const closeBtn = document.createElement('button');
+  closeBtn.type = 'button';
+  closeBtn.className = 'ghost-btn';
+  closeBtn.textContent = 'Fechar';
+  closeBtn.addEventListener('click', () => {
+    banner.style.display = 'none';
+    banner.innerHTML = '';
+    document.getElementById('results').style.display = 'none';
+  });
+  banner.appendChild(closeBtn);
+  banner.style.display = 'flex';
+
+  document.getElementById('rName1').textContent = c.n1;
+  document.getElementById('rName2').textContent = c.n2;
+  document.getElementById('metaLine').textContent =
+    `${c.aspectsCount || 0} aspectos e ${c.housesCount || 0} sobreposições de casa interpretados`;
+
+  const confidenceEl = document.getElementById('confidenceNote');
+  if ((c.aspectsCount || 0) < CALIBRATION.minAspectsForConfidence){
+    confidenceEl.textContent = `⚠ Leitura baseada em poucos aspectos (${c.aspectsCount || 0}) — com uma amostra pequena, 1 ou 2 contatos isolados pesam mais do que deveriam, e o resultado pode mudar bastante se você colar o relatório completo.`;
+    confidenceEl.style.display = 'block';
+  } else {
+    confidenceEl.textContent = '';
+    confidenceEl.style.display = 'none';
+  }
+
+  const bars = document.getElementById('bars');
+  bars.innerHTML = '';
+  const order = ['emocional','sexual','intelectual','pratico'];
+  for (const key of order){
+    const meta = catMeta[key];
+    const val = c.pct[key];
+    const row = document.createElement('div');
+    row.className = 'bar-row';
+    row.innerHTML = `
+      <div class="top">
+        <span class="cat-name"><span class="dot" style="background:${meta.color}"></span>${meta.label}</span>
+        <span>${val.toFixed(0)}%</span>
+      </div>
+      <div class="bar-track"><div class="bar-fill" style="background:${meta.color}"></div></div>
+    `;
+    bars.appendChild(row);
+    setTimeout(()=>{ row.querySelector('.bar-fill').style.width = val + '%'; }, 60);
+  }
+
+  document.getElementById('strengthVal').textContent = c.strength;
+  document.getElementById('compatVal').textContent = c.compatibilityScore != null ? c.compatibilityScore + '%' : '—';
+  document.getElementById('immediateVal').textContent = c.immediateHarmonyPct != null ? c.immediateHarmonyPct + '%' : '—';
+  document.getElementById('structureVal').textContent = c.structureHarmonyPct != null ? c.structureHarmonyPct + '%' : '—';
+  document.getElementById('harmonyVal').textContent = c.harmonyPct + '%';
+
+  const compatNoteEl = document.getElementById('compatNote');
+  if (c.compatibilityScore == null){
+    compatNoteEl.textContent = '⚠ Poucos aspectos nos eixos de Pegação e/ou Estrutura pra calcular uma Compatibilidade Geral confiável — cole o relatório completo pra destravar esse número.';
+    compatNoteEl.style.display = 'block';
+  } else {
+    compatNoteEl.textContent = '';
+    compatNoteEl.style.display = 'none';
+  }
+
+  // título vem salvo (igual ao que aparece no card); a descrição não era salva, então
+  // é recomputada aqui a partir dos mesmos números salvos — classify() é determinística.
+  const verdict = classify(c.pct, c.harmonyPct, c.strength, relType, c.immediateHarmonyPct, c.structureHarmonyPct);
+  document.getElementById('verdictTitle').textContent = c.verdictTitle || verdict.title;
+  document.getElementById('verdictDesc').textContent = verdict.desc;
+
+  const markersEl = document.getElementById('markers');
+  const chips = [];
+  if ((c.saturnCommitmentContacts || 0) > 0){
+    chips.push(`<details class="marker-chip saturn" name="markers-main"><summary><span class="icon">♄</span>Saturno · compromisso (${c.saturnCommitmentContacts})${markerBreakdown(c.saturnCommitmentHarmonic||0, c.saturnCommitmentAmbivalent||0, c.saturnCommitmentTense||0)}</summary><div class="marker-detail">${escapeHtml((c.saturnCommitmentDetails||[]).join('\n'))}</div></details>`);
+  }
+  if ((c.nodeDestinyContacts || 0) > 0){
+    chips.push(`<details class="marker-chip node" name="markers-main"><summary><span class="icon">☊</span>Nodo · eixo do destino (${c.nodeDestinyContacts})${markerBreakdown(c.nodeDestinyHarmonic||0, c.nodeDestinyAmbivalent||0, c.nodeDestinyTense||0)}</summary><div class="marker-detail">${escapeHtml((c.nodeDestinyDetails||[]).join('\n'))}</div></details>`);
+  }
+  if ((c.nodeAxisContacts || 0) > 0){
+    chips.push(`<details class="marker-chip node" name="markers-main"><summary><span class="icon">☊☊</span>Nodo · eixo nodal mútuo (${c.nodeAxisContacts})${markerBreakdown(c.nodeAxisHarmonic||0, c.nodeAxisAmbivalent||0, c.nodeAxisTense||0)}</summary><div class="marker-detail">${escapeHtml((c.nodeAxisDetails||[]).join('\n'))}</div></details>`);
+  }
+  if ((c.vertexFatedContacts || 0) > 0){
+    chips.push(`<details class="marker-chip vertex" name="markers-main"><summary><span class="icon">✧</span>Vértice · encontro (${c.vertexFatedContacts})${markerBreakdown(c.vertexFatedHarmonic||0, c.vertexFatedAmbivalent||0, c.vertexFatedTense||0)}</summary><div class="marker-detail">${escapeHtml((c.vertexFatedDetails||[]).join('\n'))}</div></details>`);
+  }
+  if ((c.chironWoundContacts || 0) > 0){
+    chips.push(`<details class="marker-chip chiron" name="markers-main"><summary><span class="icon">⚷</span>Quíron (${c.chironWoundContacts})${markerBreakdown(c.chironWoundHarmonic||0, c.chironWoundAmbivalent||0, c.chironWoundTense||0)}</summary><div class="marker-detail">${escapeHtml((c.chironWoundDetails||[]).join('\n'))}</div></details>`);
+  }
+  if ((c.lilithMagneticContacts || 0) > 0){
+    chips.push(`<details class="marker-chip lilith" name="markers-main"><summary><span class="icon">⚸</span>Lilith (${c.lilithMagneticContacts})${markerBreakdown(c.lilithMagneticHarmonic||0, c.lilithMagneticAmbivalent||0, c.lilithMagneticTense||0)}</summary><div class="marker-detail">${escapeHtml((c.lilithMagneticDetails||[]).join('\n'))}</div></details>`);
+  }
+  if ((c.houseConvergenceContacts || 0) > 0){
+    chips.push(`<details class="marker-chip houses" name="markers-main"><summary><span class="icon">⌂</span>Casas · convergência (${c.houseConvergenceContacts})</summary><div class="marker-detail">${escapeHtml((c.houseConvergenceDetails||[]).join('\n'))}</div></details>`);
+  }
+  if (chips.length){
+    markersEl.innerHTML = chips.join('');
+    markersEl.style.display = 'flex';
+  } else {
+    markersEl.innerHTML = '';
+    markersEl.style.display = 'none';
+  }
+
+  const debug = document.getElementById('debugContent');
+  debug.innerHTML = `<ul>
+    <li>Aspectos reconhecidos: ${c.aspectsCount || 0}</li>
+    <li>Casas reconhecidas: ${c.housesCount || 0}</li>
+    <li>Peso harmônico: ${c.harmonyPct}% · Força bruta: ${c.strength}</li>
+    <li style="color:var(--muted)">Dados de dados brutos (duplicatas ignoradas, linhas não reconhecidas) só ficam disponíveis num cálculo ao vivo — use "Recalcular" pra ver essa checagem atualizada.</li>
+  </ul>`;
+
+  document.getElementById('results').style.display = 'block';
+  document.getElementById('results').scrollIntoView({ behavior:'smooth', block:'start' });
+}
+
+function recalcAll(){
+  if (comparisons.length === 0) return;
+  let updatedCount = 0, skippedCount = 0;
+  comparisons = comparisons.map(c => {
+    const updated = recalcEntry(c);
+    if (!updated){ skippedCount++; return c; }
+    updatedCount++;
+    return { ...c, ...updated };
+  });
+  saveComparisons();
+  renderComparisons();
+  const skippedNote = skippedCount > 0 ? ` (${skippedCount} pulada${skippedCount > 1 ? 's' : ''} por falta do texto original)` : '';
+  alert(`Recálculo concluído: ${updatedCount} sinastria${updatedCount === 1 ? '' : 's'} atualizada${updatedCount === 1 ? '' : 's'}${skippedNote}.`);
+}
+
+function downloadFile(filename, content, mime){
+  const blob = new Blob([content], { type: mime });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function comparisonsToCSV(){
+  const header = [
+    'Pessoa 1','Pessoa 2','Tipo de vínculo','Intelectual %','Emocional %','Sexual %','Prático %',
+    'Compatibilidade Geral %','Pegação (imediato) %','Estrutura (longo prazo) %','Harmonia geral %','Força',
+    'Veredito','Aspectos','Casas',
+    'Saturno (compromisso) total','Saturno harmônico','Saturno ambivalente','Saturno tenso',
+    'Nodo (destino) total','Nodo harmônico','Nodo ambivalente','Nodo tenso',
+    'Nodo (eixo mútuo) total','Nodo eixo mútuo harmônico','Nodo eixo mútuo ambivalente','Nodo eixo mútuo tenso',
+    'Vértice (encontro fatídico) total','Vértice harmônico','Vértice ambivalente','Vértice tenso',
+    'Quíron (ferida e cura) total','Quíron harmônico','Quíron ambivalente','Quíron tenso',
+    'Lilith (atração magnética) total','Lilith harmônico','Lilith ambivalente','Lilith tenso',
+    'Casas (convergência)','Data'
+  ];
+  const esc = v => `"${String(v).replace(/"/g,'""')}"`;
+  const pctOrDash = v => (v === null || v === undefined) ? '—' : v;
+  const rows = sortedComparisons().map(c => [
+    c.n1, c.n2, REL_TYPE_LABEL_PT[c.relType || 'romantico'],
+    c.pct.intelectual.toFixed(1), c.pct.emocional.toFixed(1), c.pct.sexual.toFixed(1), c.pct.pratico.toFixed(1),
+    pctOrDash(c.compatibilityScore), pctOrDash(c.immediateHarmonyPct), pctOrDash(c.structureHarmonyPct), c.harmonyPct, c.strength,
+    c.verdictTitle, c.aspectsCount, c.housesCount,
+    c.saturnCommitmentContacts || 0, c.saturnCommitmentHarmonic || 0, c.saturnCommitmentAmbivalent || 0, c.saturnCommitmentTense || 0,
+    c.nodeDestinyContacts || 0, c.nodeDestinyHarmonic || 0, c.nodeDestinyAmbivalent || 0, c.nodeDestinyTense || 0,
+    c.nodeAxisContacts || 0, c.nodeAxisHarmonic || 0, c.nodeAxisAmbivalent || 0, c.nodeAxisTense || 0,
+    c.vertexFatedContacts || 0, c.vertexFatedHarmonic || 0, c.vertexFatedAmbivalent || 0, c.vertexFatedTense || 0,
+    c.chironWoundContacts || 0, c.chironWoundHarmonic || 0, c.chironWoundAmbivalent || 0, c.chironWoundTense || 0,
+    c.lilithMagneticContacts || 0, c.lilithMagneticHarmonic || 0, c.lilithMagneticAmbivalent || 0, c.lilithMagneticTense || 0,
+    c.houseConvergenceContacts || 0,
+    new Date(c.ts).toLocaleString('pt-BR')
+  ].map(esc).join(','));
+  return [header.map(esc).join(','), ...rows].join('\r\n');
+}
+
+document.getElementById('exportCsvBtn').addEventListener('click', () => {
+  if (comparisons.length === 0){ alert('Nada pra exportar ainda — calcule pelo menos uma sinastria primeiro.'); return; }
+  downloadFile('comparacao-sinastrias.csv', '\ufeff' + comparisonsToCSV(), 'text/csv;charset=utf-8;');
+});
+
+document.getElementById('exportJsonBtn').addEventListener('click', () => {
+  if (comparisons.length === 0){ alert('Nada pra exportar ainda — calcule pelo menos uma sinastria primeiro.'); return; }
+  downloadFile('comparacao-sinastrias.json', JSON.stringify(sortedComparisons(), null, 2), 'application/json');
+});
+
+// Valida e normaliza uma entrada vinda de um JSON importado — aceita tanto o formato
+// atual quanto exports mais antigos (de antes do marcador de Casas/convergência ou do
+// tipo de vínculo existirem), preenchendo os campos que faltarem com defaults seguros
+// em vez de rejeitar a entrada inteira. Retorna null se faltar algo essencial (nomes,
+// percentuais por categoria, harmonia, força, veredito) — aí a entrada é ignorada.
+function validateImportedEntry(obj){
+  if (!obj || typeof obj !== 'object') return null;
+  if (typeof obj.n1 !== 'string' || typeof obj.n2 !== 'string') return null;
+  if (!obj.pct || typeof obj.pct !== 'object') return null;
+  for (const k of ['intelectual','emocional','sexual','pratico']){
+    if (typeof obj.pct[k] !== 'number') return null;
+  }
+  if (typeof obj.harmonyPct !== 'number' || typeof obj.strength !== 'number') return null;
+  if (typeof obj.verdictTitle !== 'string') return null;
+
+  return {
+    n1: obj.n1, n2: obj.n2,
+    raw: typeof obj.raw === 'string' ? obj.raw : '',
+    relType: ['romantico','amizade','familia'].includes(obj.relType) ? obj.relType : 'romantico',
+    pct: {
+      intelectual: obj.pct.intelectual, emocional: obj.pct.emocional,
+      sexual: obj.pct.sexual, pratico: obj.pct.pratico,
+    },
+    harmonyPct: obj.harmonyPct, strength: obj.strength, verdictTitle: obj.verdictTitle,
+    aspectsCount: typeof obj.aspectsCount === 'number' ? obj.aspectsCount : 0,
+    housesCount: typeof obj.housesCount === 'number' ? obj.housesCount : 0,
+    // eixos imediato/estrutura e compatibilidade geral não existiam em exports antigos —
+    // null é o valor correto de "não calculado" (mesma semântica usada quando o pool tem
+    // aspectos insuficientes), então a UI já sabe mostrar "—" sem precisar de outro caso.
+    immediateHarmonyPct: typeof obj.immediateHarmonyPct === 'number' ? obj.immediateHarmonyPct : null,
+    structureHarmonyPct: typeof obj.structureHarmonyPct === 'number' ? obj.structureHarmonyPct : null,
+    compatibilityScore: typeof obj.compatibilityScore === 'number' ? obj.compatibilityScore : null,
+    saturnCommitmentContacts: obj.saturnCommitmentContacts || 0,
+    saturnCommitmentHarmonic: obj.saturnCommitmentHarmonic || 0,
+    saturnCommitmentAmbivalent: obj.saturnCommitmentAmbivalent || 0,
+    saturnCommitmentTense: obj.saturnCommitmentTense || 0,
+    saturnCommitmentDetails: Array.isArray(obj.saturnCommitmentDetails) ? obj.saturnCommitmentDetails : [],
+    nodeDestinyContacts: obj.nodeDestinyContacts || 0,
+    nodeDestinyHarmonic: obj.nodeDestinyHarmonic || 0,
+    nodeDestinyAmbivalent: obj.nodeDestinyAmbivalent || 0,
+    nodeDestinyTense: obj.nodeDestinyTense || 0,
+    nodeDestinyDetails: Array.isArray(obj.nodeDestinyDetails) ? obj.nodeDestinyDetails : [],
+    nodeAxisContacts: obj.nodeAxisContacts || 0,
+    nodeAxisHarmonic: obj.nodeAxisHarmonic || 0,
+    nodeAxisAmbivalent: obj.nodeAxisAmbivalent || 0,
+    nodeAxisTense: obj.nodeAxisTense || 0,
+    nodeAxisDetails: Array.isArray(obj.nodeAxisDetails) ? obj.nodeAxisDetails : [],
+    vertexFatedContacts: obj.vertexFatedContacts || 0,
+    vertexFatedHarmonic: obj.vertexFatedHarmonic || 0,
+    vertexFatedAmbivalent: obj.vertexFatedAmbivalent || 0,
+    vertexFatedTense: obj.vertexFatedTense || 0,
+    vertexFatedDetails: Array.isArray(obj.vertexFatedDetails) ? obj.vertexFatedDetails : [],
+    chironWoundContacts: obj.chironWoundContacts || 0,
+    chironWoundHarmonic: obj.chironWoundHarmonic || 0,
+    chironWoundAmbivalent: obj.chironWoundAmbivalent || 0,
+    chironWoundTense: obj.chironWoundTense || 0,
+    chironWoundDetails: Array.isArray(obj.chironWoundDetails) ? obj.chironWoundDetails : [],
+    lilithMagneticContacts: obj.lilithMagneticContacts || 0,
+    lilithMagneticHarmonic: obj.lilithMagneticHarmonic || 0,
+    lilithMagneticAmbivalent: obj.lilithMagneticAmbivalent || 0,
+    lilithMagneticTense: obj.lilithMagneticTense || 0,
+    lilithMagneticDetails: Array.isArray(obj.lilithMagneticDetails) ? obj.lilithMagneticDetails : [],
+    houseConvergenceContacts: obj.houseConvergenceContacts || 0,
+    houseConvergenceDetails: Array.isArray(obj.houseConvergenceDetails) ? obj.houseConvergenceDetails : [],
+  };
+}
+
+// Importar é ADITIVO: as entradas do arquivo entram como novas sinastrias na lista
+// atual (com id novo, pra não colidir com nada que já exista) — não substitui nem
+// tenta deduplicar contra o que já está salvo. Se a intenção for restaurar um backup
+// do zero, "Limpar tudo" antes de importar resolve.
+function importComparisonsFromJSON(text){
+  let data;
+  try { data = JSON.parse(text); }
+  catch(e){ alert('Esse arquivo não é um JSON válido.'); return; }
+  if (!Array.isArray(data)){
+    alert('O JSON precisa ser uma lista de sinastrias — o mesmo formato gerado pelo botão "Exportar JSON".');
+    return;
+  }
+
+  let imported = 0, skipped = 0;
+  const now = Date.now();
+  data.forEach((raw, idx) => {
+    const normalized = validateImportedEntry(raw);
+    if (!normalized){ skipped++; return; }
+    comparisons.push({
+      id: now + idx,
+      ts: typeof raw.ts === 'number' ? raw.ts : now,
+      ...normalized,
+    });
+    imported++;
+  });
+
+  if (imported > 0){ saveComparisons(); renderComparisons(); }
+  const skippedNote = skipped > 0 ? ` (${skipped} ignorada${skipped > 1 ? 's' : ''} por formato inválido)` : '';
+  alert(`Importação concluída: ${imported} sinastria${imported === 1 ? '' : 's'} adicionada${imported === 1 ? '' : 's'}${skippedNote}.`);
+}
+
+document.getElementById('importJsonBtn').addEventListener('click', () => {
+  document.getElementById('importJsonInput').click();
+});
+document.getElementById('importJsonInput').addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => importComparisonsFromJSON(reader.result);
+  reader.onerror = () => alert('Não consegui ler esse arquivo.');
+  reader.readAsText(file);
+  e.target.value = ''; // permite selecionar o mesmo arquivo de novo depois
+});
+
+document.getElementById('sortBy').addEventListener('change', renderComparisons);
+document.getElementById('recalcAllBtn').addEventListener('click', () => {
+  if (comparisons.length === 0){ alert('Nada pra recalcular ainda — calcule pelo menos uma sinastria primeiro.'); return; }
+  recalcAll();
+});
+document.getElementById('clearAllBtn').addEventListener('click', () => {
+  if (comparisons.length === 0) return;
+  if (confirm('Remover todas as sinastrias salvas na comparação? Essa ação não pode ser desfeita.')){
+    comparisons = [];
+    saveComparisons();
+    renderComparisons();
+    exitEditMode();
+  }
+});
+
+renderComparisons();
+
+document.getElementById('calcBtn').addEventListener('click', () => {
+  const viewBannerEl = document.getElementById('viewBanner');
+  viewBannerEl.style.display = 'none';
+  viewBannerEl.innerHTML = '';
+
+  const raw = document.getElementById('raw').value;
+  const errEl = document.getElementById('errorMsg');
+  errEl.style.display = 'none';
+
+  if (!raw.trim()){
+    errEl.textContent = 'Cole o texto da sinastria antes de calcular.';
+    errEl.style.display = 'block';
+    return;
+  }
+
+  const parsed = parseText(raw);
+  if (parsed.aspects.length === 0){
+    errEl.textContent = 'Não consegui reconhecer nenhum aspecto no texto colado. Confira se o formato é o mesmo do relatório de sinastria (ex: "A\'s Sun in Cancer Trine B\'s Moon in Pisces (Orb: 2°30\')").';
+    errEl.style.display = 'block';
+    return;
+  }
+
+  // auto-detect names if fields empty
+  let n1 = document.getElementById('name1').value.trim();
+  let n2 = document.getElementById('name2').value.trim();
+  const headerMatch = raw.match(/Sinastria(?: entre)?\s*\(?([A-Za-zÀ-ÿ0-9 ]+?)\s+e\s+([A-Za-zÀ-ÿ0-9 ]+?)\)?\s*:/i);
+  if (!n1 || !n2){
+    if (headerMatch){
+      n1 = n1 || headerMatch[1].trim();
+      n2 = n2 || headerMatch[2].trim();
+    } else {
+      n1 = n1 || parsed.aspects[0].p1;
+      n2 = n2 || parsed.aspects[0].p2;
+    }
+    document.getElementById('name1').value = n1;
+    document.getElementById('name2').value = n2;
+  }
+
+  const {
+    pct, harmonyPct, strength,
+    immediateHarmonyPct, structureHarmonyPct, compatibilityScore,
+    saturnCommitmentContacts, saturnCommitmentHarmonic, saturnCommitmentAmbivalent, saturnCommitmentTense, saturnCommitmentDetails,
+    nodeDestinyContacts, nodeDestinyHarmonic, nodeDestinyAmbivalent, nodeDestinyTense, nodeDestinyDetails,
+    nodeAxisContacts, nodeAxisHarmonic, nodeAxisAmbivalent, nodeAxisTense, nodeAxisDetails,
+    vertexFatedContacts, vertexFatedHarmonic, vertexFatedAmbivalent, vertexFatedTense, vertexFatedDetails,
+    chironWoundContacts, chironWoundHarmonic, chironWoundAmbivalent, chironWoundTense, chironWoundDetails,
+    lilithMagneticContacts, lilithMagneticHarmonic, lilithMagneticAmbivalent, lilithMagneticTense, lilithMagneticDetails,
+    houseConvergenceContacts, houseConvergenceDetails,
+  } = computeScores(parsed);
+
+  document.getElementById('rName1').textContent = n1;
+  document.getElementById('rName2').textContent = n2;
+  document.getElementById('metaLine').textContent =
+    `${parsed.aspects.length} aspectos e ${parsed.houses.length} sobreposições de casa interpretados`;
+
+  const confidenceEl = document.getElementById('confidenceNote');
+  if (parsed.aspects.length < CALIBRATION.minAspectsForConfidence){
+    confidenceEl.textContent = `⚠ Leitura baseada em poucos aspectos (${parsed.aspects.length}) — com uma amostra pequena, 1 ou 2 contatos isolados pesam mais do que deveriam, e o resultado pode mudar bastante se você colar o relatório completo.`;
+    confidenceEl.style.display = 'block';
+  } else {
+    confidenceEl.textContent = '';
+    confidenceEl.style.display = 'none';
+  }
+
+  const relType = document.getElementById('relType').value;
+  const catMeta = catMetaFor(relType);
+
+  const bars = document.getElementById('bars');
+  bars.innerHTML = '';
+  const order = ['emocional','sexual','intelectual','pratico'];
+  for (const key of order){
+    const meta = catMeta[key];
+    const val = pct[key];
+    const row = document.createElement('div');
+    row.className = 'bar-row';
+    row.innerHTML = `
+      <div class="top">
+        <span class="cat-name"><span class="dot" style="background:${meta.color}"></span>${meta.label}</span>
+        <span>${val.toFixed(0)}%</span>
+      </div>
+      <div class="bar-track"><div class="bar-fill" style="background:${meta.color}"></div></div>
+    `;
+    bars.appendChild(row);
+    setTimeout(()=>{ row.querySelector('.bar-fill').style.width = val + '%'; }, 60);
+  }
+
+  document.getElementById('strengthVal').textContent = strength;
+  document.getElementById('compatVal').textContent = compatibilityScore !== null ? compatibilityScore + '%' : '—';
+  document.getElementById('immediateVal').textContent = immediateHarmonyPct !== null ? immediateHarmonyPct + '%' : '—';
+  document.getElementById('structureVal').textContent = structureHarmonyPct !== null ? structureHarmonyPct + '%' : '—';
+  document.getElementById('harmonyVal').textContent = harmonyPct + '%';
+
+  const compatNoteEl = document.getElementById('compatNote');
+  if (compatibilityScore === null){
+    compatNoteEl.textContent = '⚠ Poucos aspectos nos eixos de Pegação e/ou Estrutura pra calcular uma Compatibilidade Geral confiável — cole o relatório completo pra destravar esse número.';
+    compatNoteEl.style.display = 'block';
+  } else {
+    compatNoteEl.textContent = '';
+    compatNoteEl.style.display = 'none';
+  }
+
+  const verdict = classify(pct, harmonyPct, strength, relType, immediateHarmonyPct, structureHarmonyPct);
+  document.getElementById('verdictTitle').textContent = verdict.title;
+  document.getElementById('verdictDesc').textContent = verdict.desc;
+
+  const markersEl = document.getElementById('markers');
+  const chips = [];
+  if (saturnCommitmentContacts > 0){
+    chips.push(`<details class="marker-chip saturn" name="markers-main"><summary><span class="icon">♄</span>Saturno · compromisso (${saturnCommitmentContacts})${markerBreakdown(saturnCommitmentHarmonic, saturnCommitmentAmbivalent, saturnCommitmentTense)}</summary><div class="marker-detail">${escapeHtml(saturnCommitmentDetails.join('\n'))}</div></details>`);
+  }
+  if (nodeDestinyContacts > 0){
+    chips.push(`<details class="marker-chip node" name="markers-main"><summary><span class="icon">☊</span>Nodo · eixo do destino (${nodeDestinyContacts})${markerBreakdown(nodeDestinyHarmonic, nodeDestinyAmbivalent, nodeDestinyTense)}</summary><div class="marker-detail">${escapeHtml(nodeDestinyDetails.join('\n'))}</div></details>`);
+  }
+  if (nodeAxisContacts > 0){
+    chips.push(`<details class="marker-chip node" name="markers-main"><summary><span class="icon">☊☊</span>Nodo · eixo nodal mútuo (${nodeAxisContacts})${markerBreakdown(nodeAxisHarmonic, nodeAxisAmbivalent, nodeAxisTense)}</summary><div class="marker-detail">${escapeHtml(nodeAxisDetails.join('\n'))}</div></details>`);
+  }
+  if (vertexFatedContacts > 0){
+    chips.push(`<details class="marker-chip vertex" name="markers-main"><summary><span class="icon">✧</span>Vértice · encontro (${vertexFatedContacts})${markerBreakdown(vertexFatedHarmonic, vertexFatedAmbivalent, vertexFatedTense)}</summary><div class="marker-detail">${escapeHtml(vertexFatedDetails.join('\n'))}</div></details>`);
+  }
+  if (chironWoundContacts > 0){
+    chips.push(`<details class="marker-chip chiron" name="markers-main"><summary><span class="icon">⚷</span>Quíron (${chironWoundContacts})${markerBreakdown(chironWoundHarmonic, chironWoundAmbivalent, chironWoundTense)}</summary><div class="marker-detail">${escapeHtml(chironWoundDetails.join('\n'))}</div></details>`);
+  }
+  if (lilithMagneticContacts > 0){
+    chips.push(`<details class="marker-chip lilith" name="markers-main"><summary><span class="icon">⚸</span>Lilith (${lilithMagneticContacts})${markerBreakdown(lilithMagneticHarmonic, lilithMagneticAmbivalent, lilithMagneticTense)}</summary><div class="marker-detail">${escapeHtml(lilithMagneticDetails.join('\n'))}</div></details>`);
+  }
+  if (houseConvergenceContacts > 0){
+    chips.push(`<details class="marker-chip houses" name="markers-main"><summary><span class="icon">⌂</span>Casas · convergência (${houseConvergenceContacts})</summary><div class="marker-detail">${escapeHtml(houseConvergenceDetails.join('\n'))}</div></details>`);
+  }
+  if (chips.length){
+    markersEl.innerHTML = chips.join('');
+    markersEl.style.display = 'flex';
+  } else {
+    markersEl.innerHTML = '';
+    markersEl.style.display = 'none';
+  }
+
+  const debug = document.getElementById('debugContent');
+  debug.innerHTML = `<ul>
+    <li>Aspectos reconhecidos: ${parsed.aspects.length}</li>
+    <li>Casas reconhecidas: ${parsed.houses.length}</li>
+    <li>Peso harmônico: ${harmonyPct}% · Força bruta: ${strength}</li>
+    ${parsed.duplicatesRemoved > 0 ? `<li>Aspectos duplicados ignorados (contados só uma vez): ${parsed.duplicatesRemoved}</li>` : ''}
+    ${parsed.unrecognizedCount > 0 ? `<li style="color:var(--rose)">⚠ ${parsed.unrecognizedCount} linha(s) com "Orb:" não reconhecida(s) (aspecto ou formato fora do padrão suportado) — não entraram no cálculo</li>` : ''}
+  </ul>`;
+
+  document.getElementById('results').style.display = 'block';
+  document.getElementById('results').scrollIntoView({ behavior:'smooth', block:'start' });
+
+  const entryData = {
+    n1, n2, raw, relType,
+    pct, harmonyPct, strength,
+    immediateHarmonyPct, structureHarmonyPct, compatibilityScore,
+    verdictTitle: verdict.title,
+    aspectsCount: parsed.aspects.length,
+    housesCount: parsed.houses.length,
+    saturnCommitmentContacts, saturnCommitmentHarmonic, saturnCommitmentAmbivalent, saturnCommitmentTense, saturnCommitmentDetails,
+    nodeDestinyContacts, nodeDestinyHarmonic, nodeDestinyAmbivalent, nodeDestinyTense, nodeDestinyDetails,
+    nodeAxisContacts, nodeAxisHarmonic, nodeAxisAmbivalent, nodeAxisTense, nodeAxisDetails,
+    vertexFatedContacts, vertexFatedHarmonic, vertexFatedAmbivalent, vertexFatedTense, vertexFatedDetails,
+    chironWoundContacts, chironWoundHarmonic, chironWoundAmbivalent, chironWoundTense, chironWoundDetails,
+    lilithMagneticContacts, lilithMagneticHarmonic, lilithMagneticAmbivalent, lilithMagneticTense, lilithMagneticDetails,
+    houseConvergenceContacts, houseConvergenceDetails,
+  };
+
+  if (editingId !== null){
+    updateComparison(editingId, entryData);
+    exitEditMode();
+  } else {
+    addComparison({ id: Date.now(), ts: Date.now(), ...entryData });
+  }
+});
+</script>
+</body>
+</html>
