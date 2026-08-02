@@ -16,8 +16,8 @@ Não é um veredito científico — é uma leitura simbólica baseada em pesos h
 - **Força da conexão** — % de aspectos com orbe apertado (bem exatos). Indica o quanto o mapa entre as duas pessoas é "carregado".
 - **Harmonia geral** — % do peso astrológico vindo de aspectos fáceis (trígono, sextil, conjunção) vs. tensos (quadratura, oposição), considerando todos os aspectos.
 - **Compatibilidade Geral** — combina Pegação e Estrutura por média geométrica (não simples soma/média), então só fica alta quando os dois eixos abaixo são razoavelmente bons — um eixo forte não compensa sozinho o outro fraco.
-- **Pegação (imediato)** — harmonia isolada nos eixos de atração e reconhecimento físico: Sol-Lua, Vênus-Marte, Vênus-Vênus, Marte-Marte, Lua-Lua, Lilith com Vênus/Marte, Ascendente com planetas pessoais.
-- **Estrutura (longo prazo)** — harmonia isolada nos eixos de permanência: Saturno, Nodo, Vértice e Quíron com planetas pessoais/ângulos, e MC/IC com pessoais.
+- **Pegação (imediato)** — harmonia isolada nos eixos de atração e magnetismo: Vênus-Marte, Vênus-Vênus, Marte-Marte, Lilith com Vênus/Marte, Ascendente com planetas pessoais.
+- **Estrutura (longo prazo)** — harmonia isolada nos eixos de permanência e sustentação emocional: Sol-Lua, Lua-Lua, Saturno, Nodo, Vértice e Quíron com planetas pessoais/ângulos, e MC/IC com pessoais. Sol e Lua entram aqui (e não em Pegação) porque, embora o reconhecimento entre os dois seja sentido rápido, o que ele indica na tradição de sinastria é sustentação e compatibilidade de longo prazo — a velocidade da percepção não é a mesma coisa que a natureza do que ela representa.
 - **Distribuição por categoria** — intelectual, emocional, sexual e prático, como percentuais.
 - **Marcadores especiais** — contatos narrativos específicos, cada um classificado como harmônico, ambivalente ou tenso:
   - Saturno–pessoais (indicador de compromisso)
@@ -26,6 +26,7 @@ Não é um veredito científico — é uma leitura simbólica baseada em pesos h
   - Vértice (encontro "fatídico")
   - Quíron (ferida compartilhada)
   - Lilith (magnetismo)
+  - Câmbio de luminares (Sol/Lua) — o Sol de uma pessoa cai no mesmo signo da Lua da outra, e vice-versa. A detecção não depende de orbe (é coincidência de signo, não um aspecto); mas quando os dois aspectos Sol-Lua específicos do câmbio também aparecem no relatório com orbe real, o marcador ganha classificação harmônico/ambivalente/tenso baseada no grau exato — nunca assume pela coincidência de signo sozinha (signos do mesmo elemento não garantem trígono; a distância real dentro de cada signo pode cair em qualquer aspecto). Sem esse dado de grau, o chip aparece sem cor
 - **Sobreposição de casas** — em quais casas os planetas de uma pessoa caem na carta da outra, incluindo convergências recíprocas.
 - **Veredito** — um título e descrição gerados a partir da combinação de todas as métricas acima e do tipo de vínculo escolhido.
 
@@ -39,8 +40,8 @@ Recursos da lista:
 - **Editar** nome, tipo de vínculo ou o texto colado de uma entrada.
 - **Recalcular** uma entrada (ou todas de uma vez) aplicando a lógica de pontuação mais atual sobre o texto bruto original salvo — útil depois de ajustar os pesos/regras da calculadora.
 - **Remover** entradas individualmente ou limpar tudo.
-- **Exportar** para CSV ou JSON.
-- **Importar** um JSON exportado anteriormente (com validação de estrutura).
+- **Exportar** para CSV ou JSON — inclui todos os marcadores especiais, com uma coluna própria para o câmbio de luminares.
+- **Importar** um JSON exportado anteriormente (com validação de estrutura; arquivos exportados antes do marcador de câmbio de luminares existir são aceitos normalmente, com o campo assumindo valor padrão seguro).
 
 ## Armazenamento
 

@@ -18,6 +18,7 @@
     --violet: #8b7fc7;
     --amber: #b8834a;
     --plum: #9c4f7e;
+    --pearl: #9fb3d9;
     --line: rgba(242,237,228,0.14);
     --muted: rgba(242,237,228,0.55);
   }
@@ -208,6 +209,8 @@
   .marker-chip.chiron .icon{ color: var(--amber); }
   .marker-chip.lilith{ border-color: rgba(156,79,126,0.4); }
   .marker-chip.lilith .icon{ color: var(--plum); }
+  .marker-chip.luminary{ border-color: rgba(159,179,217,0.5); }
+  .marker-chip.luminary .icon{ color: var(--pearl); }
   .marker-detail{
     position:absolute; top:calc(100% + 6px); left:0; z-index:6;
     background: var(--ink-2); border:1px solid var(--line); border-radius:6px;
@@ -288,6 +291,7 @@
   .cmarker.houses{ border-color: rgba(110,168,160,0.4); }
   .cmarker.chiron{ border-color: rgba(184,131,74,0.4); }
   .cmarker.lilith{ border-color: rgba(156,79,126,0.4); }
+  .cmarker.luminary{ border-color: rgba(159,179,217,0.5); }
   .cmarker-detail{
     position:absolute; top:calc(100% + 5px); left:0; z-index:6;
     background: var(--ink-2); border:1px solid var(--line); border-radius:6px;
@@ -403,12 +407,12 @@
         <div class="stat">
           <div class="val" id="immediateVal">—</div>
           <div class="lbl">Pegação (imediato)</div>
-          <div class="explainer">Harmonia só nos eixos de atração/reconhecimento físico imediato: Sol-Lua, Vênus-Marte, Vênus-Vênus, Marte-Marte, Lua-Lua, Lilith com Vênus/Marte, Ascendente com pessoais.</div>
+          <div class="explainer">Harmonia só nos eixos de atração/reconhecimento imediato: Vênus-Marte, Vênus-Vênus, Marte-Marte, Lilith com Vênus/Marte, Ascendente com pessoais, Mercúrio com Vênus/Marte, Júpiter com pessoais.</div>
         </div>
         <div class="stat">
           <div class="val" id="structureVal">—</div>
           <div class="lbl">Estrutura (longo prazo)</div>
-          <div class="explainer">Harmonia só nos eixos de permanência: Saturno, Nodo, Vértice e Quíron com pessoais/ângulos, e MC/IC com pessoais.</div>
+          <div class="explainer">Harmonia só nos eixos de permanência: Sol-Lua, Lua-Lua, Mercúrio-Mercúrio, Saturno, Nodo, Vértice e Quíron com pessoais/ângulos, e MC/IC com pessoais.</div>
         </div>
       </div>
       <div class="compat-note" id="compatNote" style="display:none;"></div>
@@ -602,26 +606,27 @@ const VERTEX_FATED_TARGETS = new Set(['Sun','Moon','Venus','Mars','Ascendant','M
 
 // --- Eixo Imediato (pegação/faísca) vs Eixo Estrutura (longo prazo) ---
 // Não reclassifica TODOS os aspectos — só os que a literatura de sinastria mais associa
-// a cada papel. Aspectos fora das duas listas (ex: Mercúrio-Mercúrio, Júpiter solto)
-// continuam contribuindo só pro harmonyPct geral (a média de tudo), sem entrar em
-// nenhum dos dois sub-scores — não são decisivamente "spark" nem "estrutura".
+// a cada papel. Aspectos fora das duas listas continuam contribuindo só pro harmonyPct
+// geral (a média de tudo), sem entrar em nenhum dos dois sub-scores — não são
+// decisivamente "spark" nem "estrutura".
 //
 // Imediato: os eixos clássicos de atração/reconhecimento físico — praticamente o mesmo
 // grupo do AXIS_BOOST tier 1, mais Vênus-Vênus e Marte-Marte (ressonância direta de
 // desejo/estilo quando o MESMO planeta se repete entre os dois mapas).
 const IMMEDIATE_AXIS_PAIRS = new Set([
-  'Moon-Sun', 'Mars-Venus', 'Venus-Venus', 'Mars-Mars',
+  'Mars-Venus', 'Venus-Venus', 'Mars-Mars',
   'Ascendant-Sun', 'Ascendant-Moon', 'Ascendant-Venus', 'Ascendant-Mars',
   // pares tier-2 do AXIS_BOOST (peso 1.20) — tão clássicos de atração/química imediata
   // quanto Vênus-Marte, mas que ficaram de fora na primeira versão deste eixo, deixando
   // o pool "imediato" artificialmente raso em mapas onde esses são os aspectos que
   // aparecem (ex: Vênus sextil Sol, Marte oposição Sol) em vez de Vênus-Marte direto.
+  // Sun-Venus/Moon-Venus/Mars-Sun/Moon-Mars ficam de fora de propósito: aqui quem
+  // "puxa" pra química é Vênus/Marte — o outro lado (Sol/Lua) não muda a natureza
+  // imediata do contato, então continuam nesta lista.
   'Sun-Venus', 'Moon-Venus', 'Mars-Sun', 'Moon-Mars',
-  // Lua-Lua: ressonância emocional direta — a literatura de sinastria cita isso lado a
-  // lado com Sol-Lua e Vênus-Marte como um dos indicadores mais centrais de compatibilidade
-  // romântica (não estava incluído antes; só Vênus-Vênus e Marte-Marte tinham essa
-  // ressonância "mesmo planeta se repete" reconhecida).
-  'Moon-Moon',
+  // Moon-Sun e Moon-Moon NÃO estão aqui de propósito — ver LUMINARY_STRUCTURE_PAIRS
+  // logo abaixo e o comentário junto dele: são estruturais, não imediatos, apesar de
+  // serem sentidos rápido.
   // Lilith em contato com Vênus/Marte: atração magnética/tabu instantânea — a literatura
   // de sinastria trata isso como um eixo de faísca imediata (desejo, química, "puxão"),
   // não algo que se constrói com o tempo. Não incluímos Lilith-Sol/Lilith-Lua aqui: esses
@@ -629,6 +634,18 @@ const IMMEDIATE_AXIS_PAIRS = new Set([
   // ficam de fora do eixo Imediato (mas continuam contando no peso geral de categoria e
   // no marcador narrativo lilithMagneticContacts, que é mais abrangente por design).
   'Lilith-Mars', 'Lilith-Venus',
+  // Mercúrio com Vênus/Marte: como cada um fala sobre afeto e desejo — flerte, o "papo"
+  // que já sinaliza química antes de qualquer outra coisa. Mercúrio-Mercúrio (estilo de
+  // comunicação em si, sem envolver afeto/desejo) fica de fora de propósito — ver
+  // MENTAL_STRUCTURE_PAIRS abaixo: isso é mais sobre entendimento construído com o tempo
+  // do que faísca instantânea.
+  'Mars-Mercury', 'Mercury-Venus',
+  // Júpiter tocando um pessoal do parceiro: a sensação de calor/facilidade/generosidade
+  // que Júpiter traz é sentida quase de imediato ("é fácil, é bom estar perto") — mesma
+  // família de reconhecimento rápido do Ascendente, mesmo não sendo sobre atração física
+  // propriamente dita. Júpiter-Júpiter (otimismo mútuo, mesmo "tamanho de mundo")
+  // entra pelo mesmo motivo.
+  'Jupiter-Sun', 'Jupiter-Moon', 'Jupiter-Venus', 'Jupiter-Mars', 'Jupiter-Jupiter',
 ]);
 
 // Estrutura: os pontos tradicionalmente ligados a permanência/compromisso (Saturno),
@@ -638,8 +655,23 @@ const IMMEDIATE_AXIS_PAIRS = new Set([
 // Imediato) porque "ferida e cura" é uma dinâmica que se revela e se trabalha com o
 // tempo, não uma faísca de reconhecimento instantâneo — mesma família de Saturno/Nodo.
 const STRUCTURE_ANCHORS = new Set(['Saturn', 'Node', 'SouthNode', 'Vertex', 'MC', 'IC', 'DSC', 'Chiron']);
+
+// Sol-Lua e Lua-Lua: apesar de serem sentidos rapidamente (reconhecimento instintivo,
+// quase pré-verbal), a tradição de sinastria trata o que esses contatos REPRESENTAM
+// como algo estrutural — sustentação emocional e compatibilidade de longo prazo —, não
+// como faísca/magnetismo (isso é domínio de Vênus-Marte). A velocidade da percepção não
+// é o mesmo que a natureza do que ela indica, então os dois entram 100% no eixo
+// Estrutura, na mesma família de Saturno/Nodo, e saem do eixo Imediato.
+const LUMINARY_STRUCTURE_PAIRS = new Set(['Moon-Sun', 'Moon-Moon']);
+
+// Mercúrio-Mercúrio: compatibilidade de raciocínio/comunicação — a base racional que
+// sustenta entendimento mútuo ao longo do tempo, não uma faísca física. Mesma lógica de
+// Sol-Lua/Lua-Lua acima (o que o contato REPRESENTA importa mais que a velocidade com
+// que é sentido): entra 100% no eixo Estrutura.
+const MENTAL_STRUCTURE_PAIRS = new Set(['Mercury-Mercury']);
 function axisPoolFor(planet1, planet2){
   const pairKey = [planet1, planet2].sort().join('-');
+  if (LUMINARY_STRUCTURE_PAIRS.has(pairKey) || MENTAL_STRUCTURE_PAIRS.has(pairKey)) return 'structure';
   if (IMMEDIATE_AXIS_PAIRS.has(pairKey)) return 'immediate';
   const anchorHitsPersonal = (anchor, other) =>
     STRUCTURE_ANCHORS.has(anchor) && (CORE_PERSONAL_PLANETS.has(other) || other === 'Ascendant' || other === 'MC');
@@ -665,6 +697,17 @@ function markerBreakdown(harmonic, ambivalent, tense){
   return parts.length > 1 ? ` · ${parts.join(' ')}` : '';
 }
 
+// Emoji único de categoria, pra marcadores binários (presença/ausência, não contagem)
+// como o câmbio de luminares — null/undefined = sem dado de grau suficiente pra
+// qualificar, fica sem cor (não é "neutro" no sentido de ambivalente, é "não sei").
+const CATEGORY_LABEL_PT = { harmonic: 'Harmônico', ambivalent: 'Ambivalente', tense: 'Tenso' };
+function categoryEmoji(cat){
+  if (cat === 'harmonic') return '🟢 ';
+  if (cat === 'tense') return '🔴 ';
+  if (cat === 'ambivalent') return '🟡 ';
+  return '';
+}
+
 // Três estados em vez de dois: hFrac >= 0.6 flui de verdade, hFrac <= 0.4 atrita de
 // verdade, e a faixa estreita entre os dois é onde vivem os contatos genuinamente
 // ambivalentes deste sistema (conjunção de Saturno sozinha, conjunção transpessoal) —
@@ -679,6 +722,7 @@ function markerCategory(hFrac){
 const PLANET_LABEL_PT = {
   Sun:'Sol', Moon:'Lua', Venus:'Vênus', Mars:'Marte', Saturn:'Saturno', Node:'Nodo Norte',
   SouthNode:'Nodo Sul', Vertex:'Vértice', Ascendant:'Ascendente', MC:'Meio-do-Céu', DSC:'Descendente',
+  Fortune:'Parte da Fortuna',
 };
 const ASPECT_LABEL_PT = {
   Conjunction:'conjunção', Trine:'trígono', Square:'quadratura', Opposition:'oposição',
@@ -702,15 +746,21 @@ function formatMarkerDetail(a, category){
 }
 
 // Marcador narrativo de "convergência de casas" — casas hoje só entram diluídas nas 4
-// categorias (peso baixo), mas dois padrões tradicionais merecem destaque à parte, no
+// categorias (peso baixo), mas alguns padrões tradicionais merecem destaque à parte, no
 // mesmo espírito de Saturno/Nodo/Vértice acima:
 //  1) sobreposição RECÍPROCA: o mesmo planeta pessoal de A cai na casa N de B, E o
 //     mesmo planeta pessoal de B cai na MESMA casa N de A — reforço mútuo real, não
-//     coincidência (ex: Lua de A na 1ª de B + Lua de B na 1ª de A).
-//  2) planeta pessoal caindo na 1ª ou 7ª casa do outro (ângulos de "reconhecimento" e
-//     "parceria" mais citados em sinastria), mesmo sem reciprocidade.
+//     coincidência (ex: Lua de A na 1ª de B + Lua de B na 1ª de A). Vale pra QUALQUER
+//     casa, não só as listadas em (2) — reciprocidade já é sinal forte por si só.
+//  2) planeta pessoal caindo numa casa temática de destaque do outro, mesmo sem
+//     reciprocidade — 1ª/7ª (reconhecimento/parceria, os ângulos clássicos), 5ª
+//     (romance/paixão — a casa tradicional de affair e prazer), 8ª (intimidade/fusão —
+//     vulnerabilidade e desejo profundo, inclusive financeiro/sexual) e 10ª (papel
+//     público do vínculo — como o casal aparece pro mundo, carreira em comum).
 // Um mesmo par recíproco conta só como (1) — não duplica como (2) também, mesmo que a
-// casa envolvida seja 1ª ou 7ª — pra não inflar o mesmo contato duas vezes na lista.
+// casa envolvida seja uma das temáticas — pra não inflar o mesmo contato duas vezes na
+// lista.
+const THEMATIC_HOUSES = new Set([1, 5, 7, 8, 10]);
 function computeHouseConvergence(houses){
   const contacts = [];
   const details = [];
@@ -731,13 +781,96 @@ function computeHouseConvergence(houses){
       seen.add(key);
       contacts.push({ type:'reciprocal' });
       details.push(`${h.p1} (${planetLabel}) na ${h.house}ª de ${h.p2} ↔ ${reciprocal.p1} (${planetLabel}) na ${reciprocal.house}ª de ${reciprocal.p2} — sobreposição recíproca`);
-    } else if (h.house === 1 || h.house === 7){
-      contacts.push({ type:'angular' });
+    } else if (THEMATIC_HOUSES.has(h.house)){
+      contacts.push({ type:'thematic' });
       details.push(`${h.p1} (${planetLabel}) na ${h.house}ª de ${h.p2}`);
     }
   }
 
   return { houseConvergenceContacts: contacts.length, houseConvergenceDetails: details };
+}
+
+// Câmbio de luminares (Sol/Lua trocados): quando o Sol de uma pessoa cai no MESMO
+// signo da Lua da outra, E vice-versa — um padrão específico, bastante citado na
+// tradição de sinastria como indício de reconhecimento emocional profundo entre as
+// duas pessoas (cada uma "fala a língua" da outra: uma entende instintivamente o que
+// move o parceiro emocionalmente, porque é o próprio signo solar dela).
+// A DETECÇÃO do câmbio em si é por coincidência de SIGNO (não depende de orbe/grau
+// exato) — por isso continua fora de CALIBRATION.significantMarkerOrbWeight e de
+// harmonyPct/AXIS_BOOST, do mesmo jeito que antes.
+// A CLASSIFICAÇÃO (harmônico/ambivalente/tenso) é outra história: dois signos do
+// mesmo elemento não garantem trígono — a distância real em graus dentro de cada
+// signo pode cair em qualquer aspecto, incluindo quadratura. Signo sozinho não dá
+// esse dado. Então só classificamos quando os dois aspectos Sol-Lua específicos do
+// câmbio (A-Sol↔B-Lua e A-Lua↔B-Sol) também aparecem em `aspects` como aspectos
+// reais, com orbe — aí sim usamos o grau exato que o relatório forneceu. Quando um
+// dos dois (ou os dois) não está listado como aspecto — o app de origem só lista
+// aspectos dentro de um orbe máximo, e esse contato específico pode ter ficado largo
+// demais pra entrar —, não inventamos uma cor: o chip continua aparecendo (a
+// coincidência de signo é real), só que neutro, sem 🟢/🟡/🔴.
+function findAspectBetween(aspects, name1, planet1, name2, planet2){
+  const n1 = name1.trim().toLowerCase(), n2 = name2.trim().toLowerCase();
+  return aspects.find(a => {
+    const ap1 = a.p1.trim().toLowerCase(), ap2 = a.p2.trim().toLowerCase();
+    return (ap1 === n1 && a.planet1 === planet1 && ap2 === n2 && a.planet2 === planet2) ||
+           (ap1 === n2 && a.planet1 === planet2 && ap2 === n1 && a.planet2 === planet1);
+  }) || null;
+}
+
+function computeLuminarySwap(aspects){
+  const signsByPerson = {}; // key: nome normalizado (lowercase) -> { name, Sun, Moon }
+  const order = []; // preserva ordem de primeira aparição no texto
+
+  const record = (rawName, planet, sign) => {
+    if (planet !== 'Sun' && planet !== 'Moon') return;
+    if (!rawName || !sign) return;
+    const key = rawName.trim().toLowerCase();
+    if (!signsByPerson[key]){
+      signsByPerson[key] = { name: rawName.trim() };
+      order.push(key);
+    }
+    // primeira menção do signo prevalece — o mesmo Sol/Lua de uma pessoa aparece em
+    // dezenas de linhas de aspecto diferentes, sempre com o mesmo signo (não muda
+    // entre linhas), então não há conflito real a resolver aqui.
+    if (!signsByPerson[key][planet]) signsByPerson[key][planet] = sign;
+  };
+
+  for (const a of aspects){
+    record(a.p1, a.planet1, a.sign1);
+    record(a.p2, a.planet2, a.sign2);
+  }
+
+  // só faz sentido comparar quando dá pra identificar exatamente duas pessoas com Sol
+  // E Lua reconhecidos nos dois — relatórios com mapas de terceiros colados junto
+  // (raro, mas o formato aceita colar o texto inteiro) ficam de fora por segurança,
+  // em vez de arriscar comparar o par errado.
+  const complete = order.filter(k => signsByPerson[k].Sun && signsByPerson[k].Moon);
+  if (complete.length !== 2) return { isLuminarySwap: false, luminarySwapDetail: '', luminarySwapCategory: null };
+
+  const [ka, kb] = complete;
+  const A = signsByPerson[ka], B = signsByPerson[kb];
+  const isSwap = A.Sun.toLowerCase() === B.Moon.toLowerCase() && A.Moon.toLowerCase() === B.Sun.toLowerCase();
+  if (!isSwap) return { isLuminarySwap: false, luminarySwapDetail: '', luminarySwapCategory: null };
+
+  // tenta achar os dois aspectos reais (com orbe) que sustentam o câmbio, pra
+  // classificar por grau exato em vez de assumir pela coincidência de signo
+  const aspAtoB = findAspectBetween(aspects, A.name, 'Sun', B.name, 'Moon');
+  const aspBtoA = findAspectBetween(aspects, B.name, 'Sun', A.name, 'Moon');
+
+  let luminarySwapCategory = null;
+  if (aspAtoB && aspBtoA){
+    const sameSignAB = aspAtoB.sign1 && aspAtoB.sign2 ? aspAtoB.sign1.toLowerCase() === aspAtoB.sign2.toLowerCase() : true;
+    const sameSignBA = aspBtoA.sign1 && aspBtoA.sign2 ? aspBtoA.sign1.toLowerCase() === aspBtoA.sign2.toLowerCase() : true;
+    const fracAB = harmonicFraction(aspAtoB.aspect, aspAtoB.planet1, aspAtoB.planet2, sameSignAB);
+    const fracBA = harmonicFraction(aspBtoA.aspect, aspBtoA.planet1, aspBtoA.planet2, sameSignBA);
+    luminarySwapCategory = markerCategory((fracAB + fracBA) / 2);
+  }
+
+  return {
+    isLuminarySwap: true,
+    luminarySwapDetail: `${A.name} — Sol em ${A.Sun}, Lua em ${A.Moon}  ·  ${B.name} — Sol em ${B.Sun}, Lua em ${B.Moon}`,
+    luminarySwapCategory,
+  };
 }
 
 // Casas angulares (1/4/7/10) são tradicionalmente as mais "potentes" numa
@@ -858,6 +991,24 @@ const AXIS_BOOST = new Map([
   ['Lilith-Moon', 1.20],
   ['Lilith-Venus', 1.20],
   ['Lilith-Mars', 1.20],
+
+  // Mercúrio-Mercúrio (entendimento mútuo, base da comunicação do casal) e Mercúrio com
+  // Vênus/Marte (como cada um verbaliza afeto/desejo): mesmo tier 3 do MC/IC/Quíron/
+  // Lilith acima — sinal real e citado com frequência, mas um degrau abaixo dos eixos
+  // centrais (Vênus-Marte, Sol-Lua).
+  ['Mercury-Mercury', 1.20],
+  ['Mars-Mercury', 1.20],
+  ['Mercury-Venus', 1.20],
+
+  // Júpiter tocando um pessoal: o "calor"/generosidade/facilidade que Júpiter traz pro
+  // vínculo — tradicionalmente citado, mas mais como reforço de clima do que como eixo
+  // decisivo por si só, daí o mesmo tier 3. Júpiter-Júpiter (otimismo/visão de mundo em
+  // comum) entra no mesmo peso.
+  ['Jupiter-Sun', 1.20],
+  ['Jupiter-Moon', 1.20],
+  ['Jupiter-Venus', 1.20],
+  ['Jupiter-Mars', 1.20],
+  ['Jupiter-Jupiter', 1.20],
 ]);
 function axisBoost(planet1, planet2){
   const pair = [planet1, planet2].sort().join('-');
@@ -896,9 +1047,11 @@ function isMarsMoonConjunction(planet1, planet2){
 function harmonicFraction(aspectWord, planet1, planet2, sameSign){
   if (aspectWord === 'Trine' || aspectWord === 'Sextile') return 1.0;
   if (aspectWord === 'Square' || aspectWord === 'Opposition') return 0.0;
-  // Semisextile (30°) é um aspecto menor levemente favorável — dois signos vizinhos,
-  // sem tensão geométrica forte, mas também sem a fluidez de um sextil/trígono.
-  if (aspectWord === 'Semisextile') return 0.65;
+  // Semisextile (30°) é um aspecto menor entre signos vizinhos — sem harmonia real de
+  // elemento nem modalidade entre eles, então a tradição não sustenta tratá-lo como
+  // "levemente favorável" por padrão. Fica neutro (nem puxa pro harmônico, nem pro
+  // tenso) em vez de um valor otimista sem base clássica clara.
+  if (aspectWord === 'Semisextile') return 0.5;
   // Quincunx (150°) é classicamente um aspecto de "ajuste": nem harmônico nem
   // diretamente tenso como quadratura/oposição — mais um desconforto crônico, de
   // baixo grau, que pede adaptação constante entre os dois temas envolvidos.
@@ -926,6 +1079,14 @@ function harmonicFraction(aspectWord, planet1, planet2, sameSign){
     // apoio). Tratar como 0.15 (quase-maléfico) supercarrega o lado ruim; 0.5 (o mesmo
     // valor "neutro" usado pros transpessoais) reflete melhor esse 50/50 real.
     else if (planet1 === 'Saturn' || planet2 === 'Saturn') frac = 0.5;
+    // Marte-Mercúrio conjunto: mente/fala rápida e decisiva de um lado, mas Marte
+    // (guerra/impulso) intensificando Mercúrio (comunicação) também é a receita clássica
+    // de discussão, palavras cortantes, impaciência verbal. Não é um "maléfico" simples
+    // como Marte-Saturno (ação bloqueada) nem puramente positivo — é genuinamente 50/50,
+    // mesma família de tratamento de Saturno sozinho logo acima. Fica ANTES do fallback
+    // genérico de HARD_PLANETS, senão cairia direto em 0.15 (quase-maléfico) só por
+    // Marte estar ali, ignorando o lado construtivo (assertividade, clareza) do contato.
+    else if ((planet1 === 'Mars' && planet2 === 'Mercury') || (planet1 === 'Mercury' && planet2 === 'Mars')) frac = 0.5;
     else if (HARD_PLANETS.has(planet1) || HARD_PLANETS.has(planet2)) frac = 0.15;
     else if (TRANSPERSONAL_PLANETS.has(planet1) || TRANSPERSONAL_PLANETS.has(planet2)) frac = 0.5;
     // Quíron/Lilith conjuntos a qualquer coisa: ambivalentes por definição simbólica
@@ -953,6 +1114,11 @@ function normPlanet(raw){
   if (/south\s*node/i.test(s)) return 'SouthNode';
   if (/node/i.test(s)) return 'Node';
   if (/ascendant/i.test(s)) return 'Ascendant';
+  // Parte da Fortuna: já existia um peso definido em PLANET_PROFILE ('Fortune') mas
+  // nada normalizava as variações de nome que relatórios usam ("Part of Fortune",
+  // "Pars Fortunae", "Fortune") até baterem aqui — sem isso, esse ponto sempre caía em
+  // DEFAULT_PROFILE genérico e nunca era reconhecido como Parte da Fortuna de verdade.
+  if (/fortune|fortuna/i.test(s)) return 'Fortune';
   // Descendente: existia uma entrada 'DSC' em PLANET_PROFILE que nunca era alcançada
   // porque nada normalizava a palavra "Descendant" até bater nela — caía direto em
   // DEFAULT_PROFILE e nunca entrava em AXIS_BOOST/eixos. Corrigido aqui.
@@ -1412,6 +1578,7 @@ function computeScores(parsed){
   const strength = Math.min(100, Math.round(tightRatio * 2.3));
 
   const { houseConvergenceContacts, houseConvergenceDetails } = computeHouseConvergence(parsed.houses);
+  const { isLuminarySwap, luminarySwapDetail, luminarySwapCategory } = computeLuminarySwap(parsed.aspects);
 
   return {
     pct, harmonyPct: Math.round(harmonyPct), strength,
@@ -1423,6 +1590,7 @@ function computeScores(parsed){
     chironWoundContacts, chironWoundHarmonic, chironWoundAmbivalent, chironWoundTense, chironWoundDetails,
     lilithMagneticContacts, lilithMagneticHarmonic, lilithMagneticAmbivalent, lilithMagneticTense, lilithMagneticDetails,
     houseConvergenceContacts, houseConvergenceDetails,
+    isLuminarySwap, luminarySwapDetail, luminarySwapCategory,
   };
 }
 
@@ -1776,7 +1944,7 @@ function sortedComparisons(){
   else if (mode === 'harmony') list.sort((a,b)=> b.harmonyPct - a.harmonyPct);
   else if (mode === 'strength') list.sort((a,b)=> b.strength - a.strength);
   else if (mode === 'markers') list.sort((a,b)=>
-    ((b.saturnCommitmentContacts||0)+(b.nodeDestinyContacts||0)+(b.nodeAxisContacts||0)+(b.vertexFatedContacts||0)+(b.chironWoundContacts||0)+(b.lilithMagneticContacts||0)) - ((a.saturnCommitmentContacts||0)+(a.nodeDestinyContacts||0)+(a.nodeAxisContacts||0)+(a.vertexFatedContacts||0)+(a.chironWoundContacts||0)+(a.lilithMagneticContacts||0))
+    ((b.saturnCommitmentContacts||0)+(b.nodeDestinyContacts||0)+(b.nodeAxisContacts||0)+(b.vertexFatedContacts||0)+(b.chironWoundContacts||0)+(b.lilithMagneticContacts||0)+(b.isLuminarySwap?1:0)) - ((a.saturnCommitmentContacts||0)+(a.nodeDestinyContacts||0)+(a.nodeAxisContacts||0)+(a.vertexFatedContacts||0)+(a.chironWoundContacts||0)+(a.lilithMagneticContacts||0)+(a.isLuminarySwap?1:0))
   );
   else list.sort((a,b)=> b.ts - a.ts);
   return list;
@@ -1832,8 +2000,10 @@ function renderComparisons(){
     const cChiron = c.chironWoundContacts || 0;
     const cLilith = c.lilithMagneticContacts || 0;
     const cHouses = c.houseConvergenceContacts || 0;
-    const markersHtml = (cSaturn > 0 || cNode > 0 || cNodeAxis > 0 || cVertex > 0 || cChiron > 0 || cLilith > 0 || cHouses > 0) ? `
+    const cLuminary = !!c.isLuminarySwap;
+    const markersHtml = (cLuminary || cSaturn > 0 || cNode > 0 || cNodeAxis > 0 || cVertex > 0 || cChiron > 0 || cLilith > 0 || cHouses > 0) ? `
       <div class="cmarkers">
+        ${cLuminary ? `<details class="cmarker luminary" name="cm-${c.id}"><summary>☉☾ ${categoryEmoji(c.luminarySwapCategory)}Câmbio de luminares</summary><div class="cmarker-detail">${escapeHtml(c.luminarySwapDetail || '')}</div></details>` : ''}
         ${cSaturn > 0 ? `<details class="cmarker saturn" name="cm-${c.id}"><summary>♄ Saturno · ${cSaturn}${markerBreakdown(c.saturnCommitmentHarmonic||0, c.saturnCommitmentAmbivalent||0, c.saturnCommitmentTense||0)}</summary><div class="cmarker-detail">${escapeHtml((c.saturnCommitmentDetails||[]).join('\n'))}</div></details>` : ''}
         ${cNode > 0 ? `<details class="cmarker node" name="cm-${c.id}"><summary>☊ Nodo · ${cNode}${markerBreakdown(c.nodeDestinyHarmonic||0, c.nodeDestinyAmbivalent||0, c.nodeDestinyTense||0)}</summary><div class="cmarker-detail">${escapeHtml((c.nodeDestinyDetails||[]).join('\n'))}</div></details>` : ''}
         ${cNodeAxis > 0 ? `<details class="cmarker node" name="cm-${c.id}"><summary>☊☊ Nodo · eixo mútuo ${cNodeAxis}${markerBreakdown(c.nodeAxisHarmonic||0, c.nodeAxisAmbivalent||0, c.nodeAxisTense||0)}</summary><div class="cmarker-detail">${escapeHtml((c.nodeAxisDetails||[]).join('\n'))}</div></details>` : ''}
@@ -1908,6 +2078,7 @@ function recalcEntry(c){
     chironWoundContacts, chironWoundHarmonic, chironWoundAmbivalent, chironWoundTense, chironWoundDetails,
     lilithMagneticContacts, lilithMagneticHarmonic, lilithMagneticAmbivalent, lilithMagneticTense, lilithMagneticDetails,
     houseConvergenceContacts, houseConvergenceDetails,
+    isLuminarySwap, luminarySwapDetail, luminarySwapCategory,
   } = computeScores(parsed);
   const verdict = classify(pct, harmonyPct, strength, c.relType || 'romantico', immediateHarmonyPct, structureHarmonyPct);
   return {
@@ -1923,6 +2094,7 @@ function recalcEntry(c){
     chironWoundContacts, chironWoundHarmonic, chironWoundAmbivalent, chironWoundTense, chironWoundDetails,
     lilithMagneticContacts, lilithMagneticHarmonic, lilithMagneticAmbivalent, lilithMagneticTense, lilithMagneticDetails,
     houseConvergenceContacts, houseConvergenceDetails,
+    isLuminarySwap, luminarySwapDetail, luminarySwapCategory,
   };
 }
 
@@ -2020,6 +2192,9 @@ function viewComparison(id){
 
   const markersEl = document.getElementById('markers');
   const chips = [];
+  if (c.isLuminarySwap){
+    chips.push(`<details class="marker-chip luminary" name="markers-main"><summary><span class="icon">☉☾</span>${categoryEmoji(c.luminarySwapCategory)}Câmbio de luminares</summary><div class="marker-detail">${escapeHtml(c.luminarySwapDetail || '')}\n\nO Sol de cada um cai no signo da Lua do outro — indício clássico de reconhecimento emocional profundo entre os dois.${c.luminarySwapCategory ? '' : '\n\n(sem orbe suficiente nos aspectos Sol-Lua do relatório pra classificar como harmônico ou tenso — a coincidência de signo é real, só não dá pra qualificar pelo grau.)'}</div></details>`);
+  }
   if ((c.saturnCommitmentContacts || 0) > 0){
     chips.push(`<details class="marker-chip saturn" name="markers-main"><summary><span class="icon">♄</span>Saturno · compromisso (${c.saturnCommitmentContacts})${markerBreakdown(c.saturnCommitmentHarmonic||0, c.saturnCommitmentAmbivalent||0, c.saturnCommitmentTense||0)}</summary><div class="marker-detail">${escapeHtml((c.saturnCommitmentDetails||[]).join('\n'))}</div></details>`);
   }
@@ -2098,7 +2273,7 @@ function comparisonsToCSV(){
     'Vértice (encontro fatídico) total','Vértice harmônico','Vértice ambivalente','Vértice tenso',
     'Quíron (ferida e cura) total','Quíron harmônico','Quíron ambivalente','Quíron tenso',
     'Lilith (atração magnética) total','Lilith harmônico','Lilith ambivalente','Lilith tenso',
-    'Casas (convergência)','Data'
+    'Casas (convergência)','Câmbio de luminares (Sol/Lua)','Câmbio de luminares (classificação)','Data'
   ];
   const esc = v => `"${String(v).replace(/"/g,'""')}"`;
   const pctOrDash = v => (v === null || v === undefined) ? '—' : v;
@@ -2114,6 +2289,8 @@ function comparisonsToCSV(){
     c.chironWoundContacts || 0, c.chironWoundHarmonic || 0, c.chironWoundAmbivalent || 0, c.chironWoundTense || 0,
     c.lilithMagneticContacts || 0, c.lilithMagneticHarmonic || 0, c.lilithMagneticAmbivalent || 0, c.lilithMagneticTense || 0,
     c.houseConvergenceContacts || 0,
+    c.isLuminarySwap ? 'Sim' : 'Não',
+    c.isLuminarySwap ? (CATEGORY_LABEL_PT[c.luminarySwapCategory] || 'Sem dado de grau') : '',
     new Date(c.ts).toLocaleString('pt-BR')
   ].map(esc).join(','));
   return [header.map(esc).join(','), ...rows].join('\r\n');
@@ -2193,6 +2370,14 @@ function validateImportedEntry(obj){
     lilithMagneticDetails: Array.isArray(obj.lilithMagneticDetails) ? obj.lilithMagneticDetails : [],
     houseConvergenceContacts: obj.houseConvergenceContacts || 0,
     houseConvergenceDetails: Array.isArray(obj.houseConvergenceDetails) ? obj.houseConvergenceDetails : [],
+    // não existia em exports anteriores a este marcador — default seguro é "não detectado"
+    isLuminarySwap: !!obj.isLuminarySwap,
+    luminarySwapDetail: typeof obj.luminarySwapDetail === 'string' ? obj.luminarySwapDetail : '',
+    // luminarySwapCategory é mais recente ainda que o marcador em si (exports feitos
+    // entre a criação do marcador e a classificação por grau não têm esse campo) —
+    // só aceita valores válidos, qualquer outra coisa vira null (sem cor, honesto
+    // sobre não ter esse dado, em vez de assumir harmônico por padrão)
+    luminarySwapCategory: ['harmonic','ambivalent','tense'].includes(obj.luminarySwapCategory) ? obj.luminarySwapCategory : null,
   };
 }
 
@@ -2305,6 +2490,7 @@ document.getElementById('calcBtn').addEventListener('click', () => {
     chironWoundContacts, chironWoundHarmonic, chironWoundAmbivalent, chironWoundTense, chironWoundDetails,
     lilithMagneticContacts, lilithMagneticHarmonic, lilithMagneticAmbivalent, lilithMagneticTense, lilithMagneticDetails,
     houseConvergenceContacts, houseConvergenceDetails,
+    isLuminarySwap, luminarySwapDetail, luminarySwapCategory,
   } = computeScores(parsed);
 
   document.getElementById('rName1').textContent = n1;
@@ -2364,6 +2550,9 @@ document.getElementById('calcBtn').addEventListener('click', () => {
 
   const markersEl = document.getElementById('markers');
   const chips = [];
+  if (isLuminarySwap){
+    chips.push(`<details class="marker-chip luminary" name="markers-main"><summary><span class="icon">☉☾</span>${categoryEmoji(luminarySwapCategory)}Câmbio de luminares</summary><div class="marker-detail">${escapeHtml(luminarySwapDetail)}\n\nO Sol de cada um cai no signo da Lua do outro — indício clássico de reconhecimento emocional profundo entre os dois.${luminarySwapCategory ? '' : '\n\n(sem orbe suficiente nos aspectos Sol-Lua do relatório pra classificar como harmônico ou tenso — a coincidência de signo é real, só não dá pra qualificar pelo grau.)'}</div></details>`);
+  }
   if (saturnCommitmentContacts > 0){
     chips.push(`<details class="marker-chip saturn" name="markers-main"><summary><span class="icon">♄</span>Saturno · compromisso (${saturnCommitmentContacts})${markerBreakdown(saturnCommitmentHarmonic, saturnCommitmentAmbivalent, saturnCommitmentTense)}</summary><div class="marker-detail">${escapeHtml(saturnCommitmentDetails.join('\n'))}</div></details>`);
   }
@@ -2419,6 +2608,7 @@ document.getElementById('calcBtn').addEventListener('click', () => {
     chironWoundContacts, chironWoundHarmonic, chironWoundAmbivalent, chironWoundTense, chironWoundDetails,
     lilithMagneticContacts, lilithMagneticHarmonic, lilithMagneticAmbivalent, lilithMagneticTense, lilithMagneticDetails,
     houseConvergenceContacts, houseConvergenceDetails,
+    isLuminarySwap, luminarySwapDetail, luminarySwapCategory,
   };
 
   if (editingId !== null){
