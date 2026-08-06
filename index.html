@@ -584,6 +584,9 @@
   .rprint-cat-bar-track{ flex:1; height:8px; background:#eee; border-radius:4px; overflow:hidden; display:flex; }
   .rprint-cat-fill{ height:100%; }
   .rprint-cat-pct{ width:150px; text-align:right; font-family:'JetBrains Mono', monospace; font-size:10.5px; color:#5f5f68; flex-shrink:0; }
+  .rprint-cat-compare-item{ margin-bottom: 22px; padding-bottom: 18px; border-bottom: 1px solid #eee; }
+  .rprint-cat-compare-item:last-child{ border-bottom:none; margin-bottom:0; padding-bottom:0; }
+  .rprint-cat-compare-name{ font-family:'Space Grotesk', sans-serif; font-weight:600; font-size:13px; color:#26262f; margin-bottom:10px; }
   .rprint-marker-group{ margin-bottom:14px; break-inside: avoid; }
   .rprint-marker-group-title{ font-weight:600; margin-bottom:6px; color:#26262f; font-size:12.5px; }
   .rprint-marker-item{ margin-bottom:9px; padding-left:11px; border-left:2px solid #e7dcc4; break-inside: avoid; }
@@ -673,9 +676,9 @@
 
       <div class="stat-row">
         <div class="stat">
-          <div class="val" id="strengthVal">—</div>
-          <div class="lbl">Nitidez da conexão</div>
-          <div class="explainer">% de aspectos muito exatos (orbe apertado), contando só entre os aspectos já reconhecidos por alguma categoria de conteúdo OU eixo (mesmo pool curado da Harmonia geral, ao lado) — quanto maior, mais "carregado"/nítido é o mapa entre vocês, nesse universo já validado, não em qualquer aspecto que apareça no relatório. Dentro do Veredito, a Nitidez não soma como um ingrediente de peso próprio: ela atua como intensificador, empurrando a leitura mais forte na direção harmônica ou tensa que o resto da métrica já indicar.</div>
+          <div class="val" id="compatVal">—</div>
+          <div class="lbl">Compatibilidade Geral</div>
+          <div class="explainer" id="compatExplainer">Combina Atração e Estrutura (média geométrica, não simples) — só fica alta quando os dois eixos são razoavelmente bons. Um eixo forte não "carrega" sozinho o outro fraco. Afinidade (Júpiter) entra depois, só como ajuste fino de até ±3,6 pontos pra mais ou pra menos — não decide sozinha, só tempera.</div>
         </div>
         <div class="stat">
           <div class="val" id="harmonyVal">—</div>
@@ -684,27 +687,27 @@
         </div>
       </div>
       <div class="stat-row">
-        <div class="stat stat-highlight">
-          <div class="val" id="compatVal">—</div>
-          <div class="lbl">Compatibilidade Geral</div>
-          <div class="explainer" id="compatExplainer">Combina Atração e Estrutura (média geométrica, não simples) — só fica alta quando os dois eixos são razoavelmente bons. Um eixo forte não "carrega" sozinho o outro fraco. Afinidade (Júpiter) entra depois, só como ajuste fino de até ±3,6 pontos pra mais ou pra menos — não decide sozinha, só tempera.</div>
+        <div class="stat">
+          <div class="val" id="structureVal">—</div>
+          <div class="lbl">Estrutura (longo prazo)</div>
+          <div class="explainer">Harmonia só nos eixos de permanência: Sol-Lua, Lua-Lua, Mercúrio-Mercúrio, Saturno, MC/IC/DSC e Quíron com pessoais/ângulos. Nodo e Vértice saíram daqui — medem-se separado, no eixo Destino ao lado.</div>
         </div>
-        <div class="stat stat-highlight">
-          <div class="val" id="potentialVal">—</div>
-          <div class="lbl">Veredito</div>
-          <div class="explainer">Métrica derivada em duas etapas. Base (soma 100%, mesma proporção 40:25:15 de antes): 50% Compatibilidade Geral + 31,25% Harmonia geral + 18,75% de significância além dos eixos já contados — em vínculos românticos, Destino puro (Nodo/Vértice), já que Estrutura entra na Compatibilidade Geral; em amizade/família, a média de Estrutura e Destino, já que nenhum dos dois entra ali. Depois, a Nitidez da conexão entra como intensificador: não é somada, ela amplifica essa base pra mais perto do extremo harmônico ou tenso que ela já aponta — mais nitidez não torna o vínculo "melhor" sozinha, só torna a leitura (seja ela qual for) mais decisiva.</div>
-        </div>
-      </div>
-      <div class="stat-row">
         <div class="stat">
           <div class="val" id="destinyVal">—</div>
           <div class="lbl">Destino</div>
           <div class="explainer">Harmonia no eixo Destino: Nodo (Norte/Sul) e Vértice tocando um pessoal do parceiro, ou os dois eixos nodais entre si — harmônico E tenso contam aqui (diferente de Estrutura, este eixo não filtra só o atrito). A leitura "Atração" que ficava aqui foi removida por duplicar exatamente o número da barra Sexual/Paixão-Afeição logo acima, na seção "Marcadores por área".</div>
         </div>
+      </div>
+      <div class="stat-row">
         <div class="stat">
-          <div class="val" id="structureVal">—</div>
-          <div class="lbl">Estrutura (longo prazo)</div>
-          <div class="explainer">Harmonia só nos eixos de permanência: Sol-Lua, Lua-Lua, Mercúrio-Mercúrio, Saturno, MC/IC/DSC e Quíron com pessoais/ângulos. Nodo e Vértice saíram daqui — medem-se separado, no eixo Destino ao lado.</div>
+          <div class="val" id="strengthVal">—</div>
+          <div class="lbl">Nitidez da conexão</div>
+          <div class="explainer">% de aspectos muito exatos (orbe apertado), contando só entre os aspectos já reconhecidos por alguma categoria de conteúdo OU eixo (mesmo pool curado da Harmonia geral, ao lado) — quanto maior, mais "carregado"/nítido é o mapa entre vocês, nesse universo já validado, não em qualquer aspecto que apareça no relatório. Dentro do Veredito, a Nitidez não soma como um ingrediente de peso próprio: ela atua como intensificador, empurrando a leitura mais forte na direção harmônica ou tensa que o resto da métrica já indicar.</div>
+        </div>
+        <div class="stat stat-highlight">
+          <div class="val" id="potentialVal">—</div>
+          <div class="lbl">Veredito</div>
+          <div class="explainer">Métrica derivada em duas etapas. Base (soma 100%, mesma proporção 40:25:15 de antes): 50% Compatibilidade Geral + 31,25% Harmonia geral + 18,75% de significância além dos eixos já contados — em vínculos românticos, Destino puro (Nodo/Vértice), já que Estrutura entra na Compatibilidade Geral; em amizade/família, a média de Estrutura e Destino, já que nenhum dos dois entra ali. Depois, a Nitidez da conexão entra como intensificador: não é somada, ela amplifica essa base pra mais perto do extremo harmônico ou tenso que ela já aponta — mais nitidez não torna o vínculo "melhor" sozinha, só torna a leitura (seja ela qual for) mais decisiva.</div>
         </div>
       </div>
       <div class="compat-note" id="compatNote" style="display:none;"></div>
@@ -852,7 +855,13 @@
     </div>
 
     <div class="report-section">
-      <label>O que incluir no relatório</label>
+      <div class="report-section-head">
+        <label>O que incluir no relatório</label>
+        <div class="report-select-actions">
+          <button type="button" class="ghost-btn" id="reportOptsSelectAllBtn">Marcar todas</button>
+          <button type="button" class="ghost-btn" id="reportOptsSelectNoneBtn">Desmarcar todas</button>
+        </div>
+      </div>
       <div class="report-check-list report-options-list">
         <label class="report-check-item"><input type="checkbox" id="repSecResumo" checked> Perfil e veredito</label>
         <label class="report-check-item"><input type="checkbox" id="repSecNumeros" checked> Números principais (compatibilidade, potencial, harmonia, estrutura, destino, nitidez)</label>
@@ -4731,12 +4740,12 @@ function renderComparisons(){
       ${cVinculoHtml}
       ${domBarsHtml}
       <div class="cstats">
-        <div class="cstat"><div class="val">${c.strength}</div><div class="lbl">Nitidez</div></div>
+        <div class="cstat"><div class="val">${compatDisplay}</div><div class="lbl">Compat.</div></div>
         <div class="cstat"><div class="val">${harmonyDisplay}</div><div class="lbl">Harmonia</div></div>
-        <div class="cstat cstat-highlight"><div class="val">${compatDisplay}</div><div class="lbl">Compat.</div></div>
-        <div class="cstat${mode === 'potential' ? ' cstat-highlight' : ''}"><div class="val">${potentialDisplay}</div><div class="lbl">Vered.</div></div>
-        <div class="cstat"><div class="val">${destinyDisplay}</div><div class="lbl">Destino</div></div>
         <div class="cstat"><div class="val">${structureDisplay}</div><div class="lbl">Estrut.</div></div>
+        <div class="cstat"><div class="val">${destinyDisplay}</div><div class="lbl">Destino</div></div>
+        <div class="cstat"><div class="val">${c.strength}</div><div class="lbl">Nitidez</div></div>
+        <div class="cstat cstat-highlight"><div class="val">${potentialDisplay}</div><div class="lbl">Vered.</div></div>
       </div>
       ${markersHtml}
     `;
@@ -6416,6 +6425,12 @@ document.getElementById('reportSelectAllBtn').addEventListener('click', () => {
 document.getElementById('reportSelectNoneBtn').addEventListener('click', () => {
   document.querySelectorAll('#reportSynastryList input[type=checkbox]').forEach(cb => cb.checked = false);
 });
+document.getElementById('reportOptsSelectAllBtn').addEventListener('click', () => {
+  document.querySelectorAll('.report-options-list input[type=checkbox]').forEach(cb => cb.checked = true);
+});
+document.getElementById('reportOptsSelectNoneBtn').addEventListener('click', () => {
+  document.querySelectorAll('.report-options-list input[type=checkbox]').forEach(cb => cb.checked = false);
+});
 
 function getSelectedReportSynastries(){
   const container = document.getElementById('reportSynastryList');
@@ -6465,7 +6480,7 @@ function buildReportStatsHTML(c){
   const destiny = c.destinyHarmonyPct != null ? c.destinyHarmonyPct + '%' : '—';
   const strength = c.strength != null ? c.strength : '—';
   const stat = (v, l, hl) => `<div class="rprint-stat${hl ? ' highlight' : ''}"><div class="v">${v}</div><div class="l">${l}</div></div>`;
-  return `<div class="rprint-stats-grid">${stat(compat,'Compatibilidade',true)}${stat(potential,'Veredito')}${stat(harmony,'Harmonia')}${stat(structure,'Estrutura')}${stat(destiny,'Destino')}${stat(strength,'Nitidez')}</div>`;
+  return `<div class="rprint-stats-grid">${stat(compat,'Compatibilidade')}${stat(harmony,'Harmonia')}${stat(structure,'Estrutura')}${stat(destiny,'Destino')}${stat(strength,'Nitidez')}${stat(potential,'Veredito',true)}</div>`;
 }
 
 function buildReportCategoryHTML(categoryScores, relType){
@@ -6570,18 +6585,31 @@ function buildReportComparativeHTML(list){
   const maxCompat = maxOf('compat'), maxPotential = maxOf('potential'), maxHarmony = maxOf('harmony'),
         maxStructure = maxOf('structure'), maxDestiny = maxOf('destiny'), maxStrength = maxOf('strength');
   const cell = (v, max, suffix) => v != null ? `<td class="${max != null && v === max ? 'hl' : ''}">${v}${suffix||''}</td>` : '<td>—</td>';
-  const headRow = `<tr><th>Relação</th><th>Vínculo</th><th>Compat.</th><th>Veredito</th><th>Harmonia</th><th>Estrutura</th><th>Destino</th><th>Nitidez</th></tr>`;
+  const headRow = `<tr><th>Relação</th><th>Vínculo</th><th>Compat.</th><th>Harmonia</th><th>Estrutura</th><th>Destino</th><th>Nitidez</th><th>Veredito</th></tr>`;
   const bodyRows = rows.map(r => `<tr>
     <td>${escapeHtml(r.c.n1)} &amp; ${escapeHtml(r.c.n2)}</td>
     <td>${r.c.vinculoProfile ? escapeHtml(r.c.vinculoProfile.label) : escapeHtml(r.c.verdictTitle || '—')}</td>
     ${cell(r.compat, maxCompat, '%')}
-    ${cell(r.potential, maxPotential, '')}
     ${cell(r.harmony, maxHarmony, '%')}
     ${cell(r.structure, maxStructure, '%')}
     ${cell(r.destiny, maxDestiny, '%')}
     ${cell(r.strength, maxStrength, '')}
+    ${cell(r.potential, maxPotential, '')}
   </tr>`).join('');
   return `<div class="rprint-compare"><h2>Comparativo entre as sinastrias selecionadas</h2><table class="rprint-compare-table"><thead>${headRow}</thead><tbody>${bodyRows}</tbody></table></div>`;
+}
+
+// Mesmo grid de "Marcadores por área" (barras por categoria) que aparece na aba de
+// Comparação da calculadora, um bloco por relação — pedido explícito pra poder ver de
+// cara a diferença de categorias entre as sinastrias selecionadas, sem precisar abrir
+// cada bloco "Categorias" individual mais abaixo no relatório.
+function buildReportCategoryComparativeHTML(list){
+  const items = list.map(c => `
+    <div class="rprint-cat-compare-item">
+      <div class="rprint-cat-compare-name">${escapeHtml(c.n1)} &amp; ${escapeHtml(c.n2)}</div>
+      ${buildReportCategoryHTML(c.categoryScores, c.relType || 'romantico')}
+    </div>`).join('');
+  return `<div class="rprint-compare"><h2>Categorias por relação</h2>${items}</div>`;
 }
 
 document.getElementById('generateReportBtn').addEventListener('click', () => {
@@ -6610,7 +6638,7 @@ document.getElementById('generateReportBtn').addEventListener('click', () => {
       <h1>${selected.length === 1 ? 'Relatório de sinastria' : 'Relatório de sinastrias'}</h1>
       <div class="sub">${selected.length} relaç${selected.length === 1 ? 'ão' : 'ões'} · gerado em ${new Date().toLocaleDateString('pt-BR')}</div>
     </div>`;
-  if (showComparative) html += buildReportComparativeHTML(selected);
+  if (showComparative) html += buildReportComparativeHTML(selected) + buildReportCategoryComparativeHTML(selected);
   html += selected.map(c => buildReportRelationHTML(c, opts)).join('');
   html += `</div>`;
 
