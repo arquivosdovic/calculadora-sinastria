@@ -5338,11 +5338,20 @@ function importComparisonsFromJSON(text){
 
   let imported = 0, skipped = 0;
   const now = Date.now();
+  // Preserva o id original do arquivo — é o que liga essa sinastria às configs de
+  // prompt (promptConfigs) e aos significados "só nesta sinastria" (scope: "unique")
+  // do dicionário, ambos guardados por synastryId. Só gera um id novo se faltar, vier
+  // num tipo inválido, ou já estiver em uso por outra sinastria já carregada (evita
+  // duas sinastrias diferentes colidindo no mesmo id).
+  const usedIds = new Set(comparisons.map(c => c.id));
   data.forEach((raw, idx) => {
     const normalized = validateImportedEntry(raw);
     if (!normalized){ skipped++; return; }
+    const rawId = (typeof raw.id === 'number' || typeof raw.id === 'string') ? raw.id : null;
+    const id = (rawId !== null && !usedIds.has(rawId)) ? rawId : (now + idx);
+    usedIds.add(id);
     comparisons.push({
-      id: now + idx,
+      id,
       ts: typeof raw.ts === 'number' ? raw.ts : now,
       ...normalized,
     });
