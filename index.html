@@ -38,6 +38,30 @@
   }
   .wrap{max-width: 880px; margin: 0 auto;}
 
+  .main-tabs{
+    display:flex; gap:8px; justify-content:center;
+    margin: 0 0 36px;
+  }
+  .main-tab-btn{
+    font-family:'JetBrains Mono', monospace;
+    font-size: 12px; letter-spacing: 0.06em; text-transform:uppercase;
+    color: var(--muted);
+    background: rgba(242,237,228,0.03);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 10px 22px;
+    cursor: pointer;
+    transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+  }
+  .main-tab-btn:hover{ color: var(--paper); border-color: rgba(201,161,90,0.4); }
+  .main-tab-btn.active{
+    color: var(--ink);
+    background: var(--gold);
+    border-color: var(--gold);
+  }
+  .tab-view{ display:none; }
+  .tab-view.active{ display:block; }
+
   header{ text-align:center; margin-bottom: 40px; }
 
   .logo{ margin: 0 auto 22px; width: 72px; height: 72px; }
@@ -277,14 +301,21 @@
   .panel-headline h2{ margin:0; }
   .headline-actions{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
 
-  select#sortBy, select#filterRelType{
+  select#sortBy, select#filterRelType, select#dictSynastrySelect, select#dictFilterSelect{
     background: rgba(255,255,255,0.04); border:1px solid var(--line); color: var(--paper);
     font-family:'JetBrains Mono', monospace; font-size:11.5px; padding:8px 10px; border-radius:3px;
   }
-  select#sortBy:focus, select#filterRelType:focus{ outline:none; border-color: var(--gold); }
-  select#sortBy option, select#filterRelType option, select.field-select option{
+  select#sortBy:focus, select#filterRelType:focus, select#dictSynastrySelect:focus, select#dictFilterSelect:focus{ outline:none; border-color: var(--gold); }
+  select#sortBy option, select#filterRelType option, select.field-select option, select#dictSynastrySelect option, select#dictFilterSelect option{
     background-color: var(--ink-2); color: var(--paper);
   }
+  select#sortBy optgroup, select#filterRelType optgroup, select.field-select optgroup, select#dictSynastrySelect optgroup, select#dictFilterSelect optgroup{
+    background-color: var(--ink-2); color: var(--gold); font-style: normal; font-weight:600;
+  }
+  select#dictSynastrySelect{ min-width: 260px; }
+  select#dictFilterSelect{ min-width: 200px; }
+  .dict-select-row{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:14px; }
+  .dict-select-row label{ font-family:'JetBrains Mono', monospace; font-size:11.5px; color: var(--muted); }
 
   .ghost-btn{
     background: transparent; color: var(--muted); border:1px solid var(--line);
@@ -410,12 +441,159 @@
   .compare-card summary.cvinculo-label::after{ content:'▾'; font-size:9px; opacity:0.5; margin-left:4px; }
   .compare-card .cvinculo-toggle[open] summary.cvinculo-label::after{ content:'▴'; }
 
+  /* ---------- Dicionário de significados ---------- */
+  .dict-panel .panel-headline{ display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:4px;}
+  .dict-empty{ color: var(--muted); font-size:13px; padding: 10px 0; }
+  .dict-list{ display:flex; flex-direction:column; gap:10px; margin-top:14px; }
+  .dict-row{
+    border:1px solid var(--line); border-radius:4px; background: rgba(255,255,255,0.02);
+    padding:14px 16px;
+  }
+  .dict-row.has-entry{ border-color: rgba(201,161,90,0.4); }
+  .dict-row-head{ display:flex; align-items:baseline; justify-content:space-between; gap:10px; flex-wrap:wrap; cursor:pointer; }
+  .dict-row-title{ font-family:'Cormorant Garamond', serif; font-weight:600; font-size:17px; }
+  .dict-row-title .kind-icon{ margin-right:6px; opacity:0.8; }
+  .dict-row-meta{ display:flex; align-items:center; gap:10px; font-family:'JetBrains Mono', monospace; font-size:11px; color: var(--muted); }
+  .dict-weight-badge{
+    display:inline-block; padding:2px 8px; border-radius:10px; border:1px solid var(--line);
+    color: var(--gold); white-space:nowrap;
+  }
+  .dict-saved-badge{
+    display:inline-block; padding:2px 8px; border-radius:10px; background: rgba(201,161,90,0.16); color: var(--gold);
+    font-weight:600;
+  }
+  .dict-row-title .dict-dot{
+    display:inline-block; width:7px; height:7px; border-radius:50%; background: var(--gold);
+    margin-right:8px; vertical-align:middle; box-shadow: 0 0 4px rgba(201,161,90,0.6);
+  }
+  .dict-row-body{ margin-top:12px; display:none; }
+  .dict-row.open .dict-row-body{ display:block; }
+  .dict-row-instance{ color: var(--muted); font-size:12.5px; margin-bottom:12px; font-family:'JetBrains Mono', monospace; }
+  .dict-scope-row{ display:flex; gap:12px; flex-wrap:wrap; margin-bottom:12px; align-items:flex-end; }
+  .dict-scope-row .field{ min-width:200px; }
+  .dict-repeat-toggle{ display:flex; align-items:center; gap:8px; font-size:12.5px; color: var(--muted); margin-bottom:12px; user-select:none; }
+  .dict-repeat-toggle input{ accent-color: var(--gold); width:15px; height:15px; }
+  .dict-text-group{ display:flex; flex-direction:column; gap:10px; }
+  .dict-text-field label{ font-size:10.5px; }
+  .dict-text-field textarea{ min-height:90px; font-size:13px; overflow:hidden; resize:none; }
+  .dict-toggle-all-row{ display:flex; justify-content:flex-end; margin: -6px 0 14px; }
+
+  .dict-prompt-cfg{
+    border:1px solid var(--line); border-radius:4px; background: rgba(255,255,255,0.02);
+    padding:14px 16px; margin-bottom:18px;
+  }
+  .dict-prompt-cfg-head{ display:flex; align-items:baseline; justify-content:space-between; gap:10px; flex-wrap:wrap; cursor:pointer; }
+  .dict-prompt-cfg-title{ font-family:'Cormorant Garamond', serif; font-weight:600; font-size:16px; }
+  .dict-prompt-cfg-hint{ color: var(--muted); font-size:12px; margin: 4px 0 0; }
+  .dict-prompt-cfg-body{ margin-top:14px; display:none; }
+  .dict-prompt-cfg.open .dict-prompt-cfg-body{ display:block; }
+  .dict-prompt-cfg-row{ display:flex; gap:12px; flex-wrap:wrap; margin-bottom:12px; }
+  .dict-prompt-cfg-row .field{ min-width:140px; }
+  .dict-prompt-cfg-row .field.name-field{ flex:2; min-width:180px; }
+  .dict-prompt-cfg-row .field.sigla-field{ flex:1; max-width:120px; }
+  .dict-prompt-cfg-preview{
+    font-family:'JetBrains Mono', monospace; font-size:11.5px; color: var(--muted);
+    border-top:1px solid var(--line); padding-top:10px; margin-top:2px; line-height:1.6;
+  }
+  .dict-prompt-cfg-preview strong{ color: var(--gold); font-weight:600; }
+  .dict-copy-note{ font-size:12px; color: var(--teal); opacity:0; transition: opacity 0.2s ease; }
+  .dict-copy-note.show{ opacity:1; }
+  .dict-copy-aspect-note{ font-size:12px; color: var(--teal); opacity:0; transition: opacity 0.2s ease; }
+  .dict-copy-aspect-note.show{ opacity:1; }
+
+  /* ---------- Aba de Relatório ---------- */
+  .report-section{ margin-bottom:22px; }
+  .report-section-head{ display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; margin-bottom:10px; }
+  .report-section-head label{ margin-bottom:0; }
+  .report-select-actions{ display:flex; gap:8px; }
+  .report-check-list{
+    display:flex; flex-direction:column; gap:2px; max-height:260px; overflow-y:auto;
+    border:1px solid var(--line); border-radius:4px; padding:6px;
+  }
+  .report-options-list{ max-height:none; overflow-y:visible; }
+  .report-check-item{
+    display:flex; align-items:flex-start; gap:9px; font-size:13px; font-weight:400;
+    text-transform:none; letter-spacing:normal; font-family:'Space Grotesk', sans-serif;
+    color: var(--paper); padding:7px 8px; border-radius:3px; cursor:pointer;
+  }
+  .report-check-item:hover{ background: rgba(255,255,255,0.03); }
+  .report-check-item input{ accent-color: var(--gold); width:15px; height:15px; margin-top:1px; flex-shrink:0; }
+  .report-check-note{ color: var(--muted); font-size:11.5px; }
+  #reportError{ margin-bottom:0; }
+  #generateReportBtn{ margin-top:16px; }
+  .dict-row-actions{ display:flex; gap:10px; margin-top:10px; align-items:center; }
+  .dict-row-actions button{ padding:9px 18px; font-size:13px; margin-top:0; }
+  .dict-row-actions .ghost-btn{ padding:9px 18px; }
+  .dict-save-note{ font-size:12px; color: var(--teal); opacity:0; transition: opacity 0.2s ease; }
+  .dict-save-note.show{ opacity:1; }
+
   .compare-card .cstats{ display:grid; grid-template-columns: repeat(3, 1fr); gap:6px; }
   .compare-card .cstat{ text-align:center; border:1px solid var(--line); border-radius:3px; padding:6px 3px; }
   .compare-card .cstat .val{ font-family:'Cormorant Garamond', serif; font-size:16px; font-weight:600; }
   .compare-card .cstat .lbl{ font-size:8px; text-transform:uppercase; letter-spacing:0.04em; color:var(--muted); font-family:'JetBrains Mono', monospace; margin-top:1px; }
   .compare-card .cstat-highlight{ border-color: rgba(201,161,90,0.5); background: rgba(201,161,90,0.06); }
   .compare-card .cstat-highlight .val{ color: var(--gold); }
+
+  /* ---------- Relatório em PDF (via impressão) ---------- */
+  #reportPrintArea{ display:none; }
+  @media print{
+    /* O fundo escuro do body (gradiente + var(--ink)) só aparece quando a pessoa liga
+       "Gráficos de plano de fundo" na caixa de impressão — a mesma opção necessária pra
+       as barras de categoria (que usam background-color inline) saírem coloridas. Sem
+       zerar aqui, ligar essa opção também imprime a margem/borda escura do app em volta
+       de #reportPrintArea. html também precisa ser zerado: alguns navegadores pintam o
+       fundo da página a partir do <html>, não do <body>, quando o conteúdo não cobre
+       100% da altura. */
+    html, body{ background:#fff !important; }
+    body > *:not(#reportPrintArea){ display:none !important; }
+    #reportPrintArea{ display:block !important; }
+    @page{ margin: 16mm 14mm; }
+  }
+  .rprint{
+    background:#fff; color:#26262f; font-family:'Space Grotesk', sans-serif; font-size:13px; line-height:1.55;
+  }
+  .rprint details{ display:block; }
+  .rprint summary{ list-style:none; }
+  .rprint summary::-webkit-details-marker{ display:none; }
+  .rprint-cover{ text-align:center; padding: 10px 0 22px; border-bottom: 2px solid #c9a15a; margin-bottom:26px; }
+  .rprint-cover h1{ font-family:'Cormorant Garamond', serif; font-weight:600; font-size:30px; margin:0 0 6px; color:#26262f; }
+  .rprint-cover .sub{ color:#6b6b74; font-size:12px; font-family:'JetBrains Mono', monospace; }
+  .rprint-compare{ margin-bottom: 34px; }
+  .rprint-compare h2{ font-family:'Cormorant Garamond', serif; font-weight:600; font-size:22px; color:#26262f; border-bottom:1px solid #ddd; padding-bottom:8px; margin: 0 0 16px; }
+  .rprint-compare-table{ width:100%; border-collapse:collapse; font-size:12px; }
+  .rprint-compare-table th, .rprint-compare-table td{ border:1px solid #ddd; padding:7px 9px; text-align:left; vertical-align:top; }
+  .rprint-compare-table th{ background:#f5eee1; font-family:'JetBrains Mono', monospace; font-weight:600; font-size:10px; text-transform:uppercase; letter-spacing:0.03em; color:#7a6435; }
+  .rprint-compare-table td.hl{ font-weight:700; color:#96742f; background:#fbf6ea; }
+  .rprint-relation{ page-break-before: always; padding-top: 6px; }
+  .rprint-relation:first-of-type{ page-break-before: avoid; }
+  .rprint-relation-title{ font-family:'Cormorant Garamond', serif; font-weight:600; font-size:25px; margin:0 0 2px; color:#26262f; }
+  .rprint-relation-meta{ font-family:'JetBrains Mono', monospace; font-size:10.5px; color:#6b6b74; margin-bottom:18px; }
+  .rprint-block{ margin-bottom: 20px; break-inside: avoid; }
+  .rprint-block h3{ font-family:'Space Grotesk', sans-serif; font-weight:600; font-size:12px; text-transform:uppercase; letter-spacing:0.06em; color:#96742f; margin:0 0 10px; border-bottom:1px solid #eee; padding-bottom:6px; }
+  .rprint-vinculo{ background:#f8f4ec; border:1px solid #e7dcc4; border-radius:4px; padding:9px 13px; margin-bottom:10px; font-size:12.5px; }
+  .rprint-vinculo-note{ margin-top:6px; color:#555; font-size:11.5px; }
+  .rprint-verdict-title{ font-family:'Cormorant Garamond', serif; font-size:18px; font-weight:600; margin-bottom:4px; color:#26262f; }
+  .rprint-verdict-desc{ font-size:12.5px; line-height:1.6; color:#3a3a42; white-space:pre-line; }
+  .rprint-stats-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
+  .rprint-stat{ border:1px solid #e2e2e2; border-radius:4px; padding:9px; text-align:center; }
+  .rprint-stat.highlight{ border-color:#c9a15a; background:#fbf6ea; }
+  .rprint-stat .v{ font-family:'Cormorant Garamond', serif; font-size:20px; font-weight:600; color:#26262f; }
+  .rprint-stat .l{ font-family:'JetBrains Mono', monospace; font-size:9px; text-transform:uppercase; letter-spacing:0.03em; color:#7a7a82; margin-top:2px; }
+  .rprint-cat-row{ display:flex; align-items:center; gap:10px; margin-bottom:8px; font-size:12px; }
+  .rprint-cat-label{ width:150px; flex-shrink:0; }
+  .rprint-cat-bar-track{ flex:1; height:8px; background:#eee; border-radius:4px; overflow:hidden; display:flex; }
+  .rprint-cat-fill{ height:100%; }
+  .rprint-cat-pct{ width:150px; text-align:right; font-family:'JetBrains Mono', monospace; font-size:10.5px; color:#5f5f68; flex-shrink:0; }
+  .rprint-marker-group{ margin-bottom:14px; break-inside: avoid; }
+  .rprint-marker-group-title{ font-weight:600; margin-bottom:6px; color:#26262f; font-size:12.5px; }
+  .rprint-marker-item{ margin-bottom:9px; padding-left:11px; border-left:2px solid #e7dcc4; break-inside: avoid; }
+  .rprint-marker-item .mtitle{ font-weight:600; margin-bottom:2px; font-size:12.5px; }
+  .rprint-marker-item .mdetail{ color:#444; white-space:pre-line; font-size:11.5px; }
+  .rprint-marker-item .mnote{ color:#8a8a92; font-size:10.5px; margin-top:2px; font-style:italic; }
+  .rprint-dict-item{ margin-bottom:11px; break-inside: avoid; }
+  .rprint-dict-item .dtitle{ font-weight:600; margin-bottom:3px; font-size:12.5px; }
+  .rprint-dict-item .dtext{ font-size:12px; color:#333; white-space:pre-line; }
+  .rprint-empty-note{ color:#8a8a92; font-size:12px; font-style:italic; }
 </style>
 </head>
 <body>
@@ -433,6 +611,14 @@
     <h1>Duas cartas, uma leitura</h1>
     <p class="sub">Cole abaixo o texto de sinastria (aspectos entre planetas + sobreposição de casas) gerado pelo seu app de astrologia. A calculadora lê os aspectos e devolve um retrato da conexão.</p>
   </header>
+
+  <nav class="main-tabs">
+    <button type="button" class="main-tab-btn active" id="tabBtnCalc" data-tab="calcTab">Calculadora</button>
+    <button type="button" class="main-tab-btn" id="tabBtnDict" data-tab="dictTab">Dicionário</button>
+    <button type="button" class="main-tab-btn" id="tabBtnReport" data-tab="reportTab">Relatório</button>
+  </nav>
+
+  <div class="tab-view active" id="calcTab">
 
   <div class="panel">
     <h2>1. Nomes</h2>
@@ -536,6 +722,7 @@
       <summary>Ver dados brutos interpretados</summary>
       <div id="debugContent"></div>
     </details>
+
   </div>
 
   <div class="orbit-divider"><span></span></div>
@@ -547,6 +734,7 @@
         <select id="filterRelType" title="Filtrar por tipo de vínculo"></select>
         <select id="sortBy">
           <option value="recent">Mais recentes</option>
+          <option value="alphabetical">Ordem alfabética (A-Z)</option>
           <option value="potential">Melhor em veredito</option>
           <option value="compatibility">Maior compatibilidade geral</option>
           <option value="harmony">Maior harmonia geral</option>
@@ -573,10 +761,121 @@
     <div id="compareList"><div class="compare-empty">Nenhuma sinastria calculada ainda. Calcule a primeira acima pra começar a comparação.</div></div>
   </div>
 
+  </div>
+
+  <div class="tab-view" id="dictTab">
+
+  <div class="panel dict-panel" id="dictionaryPanel">
+    <div class="panel-headline">
+      <h2>Dicionário de significados</h2>
+      <div class="headline-actions">
+        <button type="button" class="ghost-btn" id="exportDictBtn">Exportar JSON</button>
+        <button type="button" class="ghost-btn" id="importDictBtn">Importar JSON</button>
+        <input type="file" id="importDictInput" accept=".json,application/json" style="display:none;">
+      </div>
+    </div>
+    <p class="hint">Cadastre o significado de cada aspecto e posição de casa encontrados numa sinastria — ordenados do mais pro menos importante (mesmo peso real usado no resto da calculadora: orbe + tier do par). Cada significado pode ser <strong>único desta sinastria</strong> ou <strong>reutilizável</strong> (aplicado automaticamente sempre que o mesmo padrão aparecer, em qualquer sinastria, pra todos os vínculos ou só pra um tipo). Clique numa linha pra abrir e editar.</p>
+    <div class="dict-select-row">
+      <label for="dictSynastrySelect">Ver padrões de:</label>
+      <select id="dictSynastrySelect"></select>
+    </div>
+    <div class="dict-select-row" style="margin-bottom:20px;">
+      <label for="dictFilterSelect">Filtrar:</label>
+      <select id="dictFilterSelect"></select>
+    </div>
+
+    <div class="dict-prompt-cfg open" id="dictPromptCfg">
+      <div class="dict-prompt-cfg-head" id="dictPromptCfgHead">
+        <div>
+          <span class="dict-prompt-cfg-title">Configurar prompt de preenchimento</span>
+          <p class="dict-prompt-cfg-hint">Defina nomes, siglas e o contexto do vínculo uma vez — cada linha abaixo ganha um botão "Copiar prompt" já preenchido.</p>
+        </div>
+      </div>
+      <div class="dict-prompt-cfg-body" id="dictPromptCfgBody">
+        <div class="dict-prompt-cfg-row">
+          <div class="field name-field">
+            <label>Nome — Pessoa 1</label>
+            <input type="text" id="pcName1" placeholder="Ex: Victor">
+          </div>
+          <div class="field sigla-field">
+            <label>Sigla</label>
+            <input type="text" id="pcSigla1" placeholder="Ex: VL">
+          </div>
+          <div class="field name-field">
+            <label>Nome — Pessoa 2</label>
+            <input type="text" id="pcName2" placeholder="Ex: Pedro">
+          </div>
+          <div class="field sigla-field">
+            <label>Sigla</label>
+            <input type="text" id="pcSigla2" placeholder="Ex: MP">
+          </div>
+        </div>
+        <div class="dict-prompt-cfg-row" style="margin-top:-4px;">
+          <button type="button" class="ghost-btn" id="pcDetectSiglas" style="padding:7px 14px; font-size:12px;">Detectar siglas automaticamente</button>
+          <span class="dict-prompt-cfg-hint" style="margin:0; align-self:center;">Lê as siglas (ex: DD, MEV) que aparecem nos aspectos desta sinastria e preenche os campos acima.</span>
+        </div>
+        <div class="dict-prompt-cfg-row">
+          <div class="field" style="flex:1 1 100%;">
+            <label>Contexto do vínculo (o que entra em "num contexto de...")</label>
+            <input type="text" id="pcContext" placeholder="Ex: webnamoro">
+          </div>
+        </div>
+        <div class="dict-prompt-cfg-preview" id="dictPromptCfgPreview"></div>
+      </div>
+    </div>
+
+    <div class="dict-toggle-all-row">
+      <button type="button" class="ghost-btn" id="toggleAllDictBtn">Expandir tudo</button>
+    </div>
+    <div id="dictionaryList" class="dict-list"></div>
+  </div>
+
+  </div>
+
+  <div class="tab-view" id="reportTab">
+
+  <div class="panel">
+    <div class="panel-headline">
+      <h2>Relatório</h2>
+    </div>
+    <p class="hint">Escolha uma ou mais sinastrias já calculadas e gere um PDF (pela função de imprimir do navegador — escolha "Salvar como PDF" no destino da impressão). Com uma relação só, o relatório apresenta e descreve; com duas ou mais, ele também monta uma tabela comparativa entre elas.</p>
+
+    <div class="report-section">
+      <div class="report-section-head">
+        <label>Sinastrias a incluir</label>
+        <div class="report-select-actions">
+          <button type="button" class="ghost-btn" id="reportSelectAllBtn">Marcar todas</button>
+          <button type="button" class="ghost-btn" id="reportSelectNoneBtn">Desmarcar todas</button>
+        </div>
+      </div>
+      <div id="reportSynastryList" class="report-check-list"></div>
+    </div>
+
+    <div class="report-section">
+      <label>O que incluir no relatório</label>
+      <div class="report-check-list report-options-list">
+        <label class="report-check-item"><input type="checkbox" id="repSecResumo" checked> Perfil e veredito</label>
+        <label class="report-check-item"><input type="checkbox" id="repSecNumeros" checked> Números principais (compatibilidade, potencial, harmonia, estrutura, destino, nitidez)</label>
+        <label class="report-check-item"><input type="checkbox" id="repSecCategorias" checked> Categorias (Afeição, Prático, Emocional, Intelectual, Afinidade)</label>
+        <label class="report-check-item"><input type="checkbox" id="repSecMarcadores" checked> Marcadores narrativos (Saturno, Nodo, Vértice, Quíron, Lilith...)</label>
+        <label class="report-check-item"><input type="checkbox" id="repSecSignificados" checked> Significados cadastrados no dicionário</label>
+        <label class="report-check-item"><input type="checkbox" id="repSecComparativo" checked> Tabela comparativa <span class="report-check-note">(entra automaticamente quando 2+ sinastrias estão marcadas)</span></label>
+      </div>
+    </div>
+
+    <div class="error" id="reportError"></div>
+    <button type="button" id="generateReportBtn">Gerar PDF</button>
+  </div>
+
+  </div>
+
   <footer>
     Isso é uma leitura simbólica de entretenimento baseada em pesos heurísticos entre planetas, aspectos e casas — não é um veredito científico sobre a relação de vocês :)
   </footer>
 </div>
+
+<div id="reportPrintArea"></div>
+
 
 <script>
 // Semisquare (45°) e Sesquiquadrate (135°) foram adicionados porque vários softwares
@@ -1226,6 +1525,11 @@ const ASPECT_LABEL_PT = {
   Sextile:'sextil', Quincunx:'quincúncio', Semisextile:'semisextil',
   Semisquare:'semiquadratura', Sesquiquadrate:'sesquiquadratura',
 };
+const SIGN_LABEL_PT = {
+  Aries:'Áries', Taurus:'Touro', Gemini:'Gêmeos', Cancer:'Câncer', Leo:'Leão', Virgo:'Virgem',
+  Libra:'Libra', Scorpio:'Escorpião', Sagittarius:'Sagitário', Capricorn:'Capricórnio',
+  Aquarius:'Aquário', Pisces:'Peixes',
+};
 // isHarmonic (opcional): quando informado, prefixa a linha com 🟢/🔴 pra distinguir,
 // dentro do mesmo marcador (ex: "2 contatos de Saturno"), quais contatos fluem fácil
 // e quais vêm com atrito — sem isso, um trígono e uma oposição contavam igual dentro
@@ -1238,8 +1542,10 @@ function formatMarkerDetail(a, category){
   const p1Label = PLANET_LABEL_PT[a.planet1] || a.planet1;
   const p2Label = PLANET_LABEL_PT[a.planet2] || a.planet2;
   const aspLabel = ASPECT_LABEL_PT[a.aspect] || a.aspect;
+  const sign1Label = a.sign1 ? (SIGN_LABEL_PT[a.sign1] || a.sign1) : '';
+  const sign2Label = a.sign2 ? (SIGN_LABEL_PT[a.sign2] || a.sign2) : '';
   const prefix = category === 'harmonic' ? '🟢 ' : category === 'ambivalent' ? '🟡 ' : category === 'tenseLight' ? '🟠 ' : category === 'tense' ? '🔴 ' : '';
-  return `${prefix}${a.p1} (${p1Label}) ${aspLabel} ${a.p2} (${p2Label}) — orbe ${a.orb.toFixed(1)}°`;
+  return `${prefix}${a.p1} (${p1Label}${sign1Label ? ' em '+sign1Label : ''}) ${aspLabel} ${a.p2} (${p2Label}${sign2Label ? ' em '+sign2Label : ''}) — orbe ${a.orb.toFixed(1)}°`;
 }
 
 // Marcador narrativo de "convergência de casas" — casas hoje só entram diluídas nas 4
@@ -3364,18 +3670,70 @@ const EXTREME_TEXT_BY_TYPE = {
 // Texto do "imbalanceNote" (desequilíbrio Imediato x Estrutura) — também varia por
 // tipo de vínculo, no mesmo padrão do EXTREME_TEXT_BY_TYPE acima (evita falar em
 // "pegação"/"paixão" quando o vínculo é amizade ou família).
+//
+// tier varia o FECHO da frase conforme o nível absoluto do lado mais fraco (não só a
+// diferença relativa entre os dois eixos, que é o que decide SE a nota aparece — ver
+// imbalanceThreshold em classify()). Auditoria real (caso Victor-Dalton: estrutura em
+// 66%, ainda majoritariamente favorável, só que 28pp abaixo do imediato): o texto único
+// que existia antes soava igualmente cauteloso pra um eixo fraco em 66% e um em 30%,
+// quando esses dois casos pedem leituras bem diferentes — 66% não é "frágil", só é
+// menor que a química; 30% aí sim é tensão de verdade. Reaproveita o mesmo
+// CALIBRATION.harmonyZone já usado pra "faixa mista" no resto de classify(), em vez de
+// inventar um limiar novo só pra isso.
 const IMBALANCE_TEXT_BY_TYPE = {
   romantico: {
-    immediateOverStructure: (imm, str) => ` Atenção: essa conexão puxa bem mais forte pro lado imediato — pegação, faísca, reconhecimento físico (${imm}%) — do que pra estrutura de longo prazo (${str}%). Pode ser ótima paixão ou o início de algo gostoso, mas os sinais de sustentação no tempo são mais frágeis do que a leitura geral sugere.`,
-    structureOverImmediate: (imm, str) => ` Atenção: essa conexão tem bem mais estrutura de longo prazo (${str}%) do que faísca imediata (${imm}%). Tende a ser uma boa base pra construir algo sólido, mas com menos combustão nos primeiros momentos.`,
+    immediateOverStructure: (imm, str, tier) => {
+      const closing = {
+        low:  'Nesse patamar, os sinais de sustentação no tempo são realmente escassos — vale não presumir solidez de longo prazo só pela química.',
+        mid:  'Os sinais de sustentação no tempo estão numa faixa mista — nem ausentes, nem consistentes o bastante pra confiar de olhos fechados.',
+        high: 'Pode ser uma ótima paixão e dar início a algo gostoso, mas os sinais de longo prazo, embora reais e relevantes, não assumem o mesmo protagonismo que a química nessa leitura.',
+      }[tier];
+      return ` Vale observar: essa conexão puxa mais forte pro lado imediato — pegação, faísca, reconhecimento físico (${imm}%) — do que pra estrutura de longo prazo (${str}%). ${closing}`;
+    },
+    structureOverImmediate: (imm, str, tier) => {
+      const closing = {
+        low:  'Nesse patamar, a faísca imediata é bem escassa — o vínculo pode levar tempo pra "acender" fisicamente, se é que acende.',
+        mid:  'A faísca imediata está numa faixa mista — existe, mas não domina o mapa.',
+        high: 'Tende a ser uma boa base pra construir algo sólido, mas com menos combustão nos primeiros momentos.',
+      }[tier];
+      return ` Atenção: essa conexão tem mais estrutura de longo prazo (${str}%) do que faísca imediata (${imm}%). ${closing}`;
+    },
   },
   amizade: {
-    immediateOverStructure: (imm, str) => ` Atenção: essa conexão puxa bem mais forte pro lado imediato — sintonia rápida, magnetismo instantâneo (${imm}%) — do que pra estrutura de longo prazo (${str}%). Pode ser uma amizade que engata rápido e é ótima logo de cara, mas os sinais de sustentação no tempo são mais frágeis do que a leitura geral sugere.`,
-    structureOverImmediate: (imm, str) => ` Atenção: essa conexão tem bem mais estrutura de longo prazo (${str}%) do que magnetismo imediato (${imm}%). Tende a ser uma amizade que cresce devagar e se firma bem, mesmo sem aquele "clique" instantâneo.`,
+    immediateOverStructure: (imm, str, tier) => {
+      const closing = {
+        low:  'Nesse patamar, os sinais de sustentação no tempo são realmente escassos — vale não presumir que isso vira algo duradouro só pela sintonia inicial.',
+        mid:  'Os sinais de sustentação no tempo estão numa faixa mista — nem ausentes, nem consistentes o bastante pra confiar de olhos fechados.',
+        high: 'Pode ser uma amizade que engata rápido e é ótima logo de cara, mas os sinais de sustentação no tempo são menos concentrados do que a leitura geral sugere.',
+      }[tier];
+      return ` Atenção: essa conexão puxa bem mais forte pro lado imediato — sintonia rápida, magnetismo instantâneo (${imm}%) — do que pra estrutura de longo prazo (${str}%). ${closing}`;
+    },
+    structureOverImmediate: (imm, str, tier) => {
+      const closing = {
+        low:  'Nesse patamar, o magnetismo imediato é bem escasso — a amizade pode demorar a "engatar" de fato, se é que engata.',
+        mid:  'O magnetismo imediato está numa faixa mista — existe, mas não domina o mapa.',
+        high: 'Tende a ser uma amizade que cresce devagar e se firma bem, mesmo sem aquele "clique" instantâneo.',
+      }[tier];
+      return ` Atenção: essa conexão tem bem mais estrutura de longo prazo (${str}%) do que magnetismo imediato (${imm}%). ${closing}`;
+    },
   },
   familia: {
-    immediateOverStructure: (imm, str) => ` Atenção: essa conexão puxa bem mais forte pro lado imediato — proximidade e reconhecimento que se sentem logo de cara (${imm}%) — do que pra estrutura de longo prazo (${str}%). Pode ser um vínculo com ótima energia inicial, mas os sinais de sustentação no tempo são mais frágeis do que a leitura geral sugere.`,
-    structureOverImmediate: (imm, str) => ` Atenção: esse vínculo tem bem mais estrutura de longo prazo (${str}%) do que proximidade imediata (${imm}%). Tende a se firmar com o tempo e a convivência, mesmo com menos "clique" natural de cara.`,
+    immediateOverStructure: (imm, str, tier) => {
+      const closing = {
+        low:  'Nesse patamar, os sinais de sustentação no tempo são realmente escassos — vale não presumir solidez duradoura só pela proximidade inicial.',
+        mid:  'Os sinais de sustentação no tempo estão numa faixa mista — nem ausentes, nem consistentes o bastante pra confiar de olhos fechados.',
+        high: 'Pode ser um vínculo com ótima energia inicial, mas os sinais de sustentação no tempo são menos concentrados do que a leitura geral sugere.',
+      }[tier];
+      return ` Atenção: essa conexão puxa bem mais forte pro lado imediato — proximidade e reconhecimento que se sentem logo de cara (${imm}%) — do que pra estrutura de longo prazo (${str}%). ${closing}`;
+    },
+    structureOverImmediate: (imm, str, tier) => {
+      const closing = {
+        low:  'Nesse patamar, a proximidade imediata é bem escassa — o vínculo pode levar tempo pra se sentir próximo de fato, se é que se sente.',
+        mid:  'A proximidade imediata está numa faixa mista — existe, mas não domina o mapa.',
+        high: 'Tende a se firmar com o tempo e a convivência, mesmo com menos "clique" natural de cara.',
+      }[tier];
+      return ` Atenção: esse vínculo tem bem mais estrutura de longo prazo (${str}%) do que proximidade imediata (${imm}%). ${closing}`;
+    },
   },
 };
 
@@ -3404,9 +3762,15 @@ function classify(categoryScores, harmonyPct, strength, relType, immediateHarmon
     const diff = immediateHarmonyPct - structureHarmonyPct;
     if (Math.abs(diff) >= CALIBRATION.imbalanceThreshold){
       const imb = IMBALANCE_TEXT_BY_TYPE[relType];
+      // tier olha o nível absoluto do lado mais FRACO dos dois (não a diferença, que já
+      // decidiu se a nota aparece) — mesma harmonyZone usada logo abaixo pra "faixa
+      // mista" geral, reaproveitada aqui em vez de um novo limiar dedicado.
+      const weakerPct = diff > 0 ? structureHarmonyPct : immediateHarmonyPct;
+      const { low: zoneLow, high: zoneHigh } = CALIBRATION.harmonyZone;
+      const tier = weakerPct < zoneLow ? 'low' : (weakerPct < zoneHigh ? 'mid' : 'high');
       imbalanceNote = diff > 0
-        ? imb.immediateOverStructure(immediateHarmonyPct, structureHarmonyPct)
-        : imb.structureOverImmediate(immediateHarmonyPct, structureHarmonyPct);
+        ? imb.immediateOverStructure(immediateHarmonyPct, structureHarmonyPct, tier)
+        : imb.structureOverImmediate(immediateHarmonyPct, structureHarmonyPct, tier);
     }
   }
 
@@ -3889,6 +4253,7 @@ function addComparison(entry){
   comparisons.push(entry);
   saveComparisons();
   renderComparisons();
+  refreshDictSynastryOptions();
 }
 
 function updateComparison(id, data){
@@ -3901,12 +4266,14 @@ function updateComparison(id, data){
   comparisons[idx] = { ...comparisons[idx], ...data, ts: Date.now() };
   saveComparisons();
   renderComparisons();
+  refreshDictSynastryOptions();
 }
 
 function removeComparison(id){
   comparisons = comparisons.filter(c => c.id !== id);
   saveComparisons();
   renderComparisons();
+  refreshDictSynastryOptions();
   if (editingId === id) exitEditMode();
 }
 
@@ -4156,6 +4523,11 @@ const SORT_CHAINS = {
   recent: [
     c => c.ts ?? 0,
   ],
+  alphabetical: [
+    // string (não número) — sortedComparisons detecta isso e usa localeCompare em vez
+    // de subtração; sensitivity 'base' ignora maiúsculas/acentos.
+    c => `${c.n1 || ''} & ${c.n2 || ''}`,
+  ],
 };
 // Um modo de ordenação por categoria (cat_emocional, cat_sexual, ...) pra cada área de
 // "Marcadores por área" — desempate por presence pura (categoria com mais sinal, mesmo
@@ -4175,7 +4547,12 @@ function sortedComparisons(baseList){
   const chain = SORT_CHAINS[mode] || SORT_CHAINS.recent;
   list.sort((a, b) => {
     for (const keyFn of chain){
-      const diff = keyFn(b) - keyFn(a);
+      const va = keyFn(a), vb = keyFn(b);
+      // modos numéricos (score, presence, ts...) ordenam maior→menor por subtração;
+      // o modo alfabético devolve string, aí usamos localeCompare (A→Z) em vez disso.
+      const diff = typeof va === 'string'
+        ? va.localeCompare(vb, 'pt-BR', { sensitivity: 'base' })
+        : vb - va;
       if (diff !== 0) return diff;
     }
     // desempate final: nunca deixa duas entradas "empatadas de verdade" oscilarem de
@@ -4585,6 +4962,15 @@ function viewComparison(id){
 
   const banner = document.getElementById('viewBanner');
   banner.innerHTML = `<span>Visualizando os detalhes salvos de <strong>${escapeHtml(c.n1)} &amp; ${escapeHtml(c.n2)}</strong> — estes números são os que foram salvos, não um recálculo ao vivo.</span>`;
+  const viewBannerActions = document.createElement('div');
+  viewBannerActions.style.display = 'flex';
+  viewBannerActions.style.gap = '10px';
+  const editFromViewBtn = document.createElement('button');
+  editFromViewBtn.type = 'button';
+  editFromViewBtn.className = 'ghost-btn';
+  editFromViewBtn.textContent = '✎ Editar';
+  editFromViewBtn.addEventListener('click', () => startEdit(id));
+  viewBannerActions.appendChild(editFromViewBtn);
   const closeBtn = document.createElement('button');
   closeBtn.type = 'button';
   closeBtn.className = 'ghost-btn';
@@ -4594,7 +4980,8 @@ function viewComparison(id){
     banner.innerHTML = '';
     document.getElementById('results').style.display = 'none';
   });
-  banner.appendChild(closeBtn);
+  viewBannerActions.appendChild(closeBtn);
+  banner.appendChild(viewBannerActions);
   banner.style.display = 'flex';
 
   document.getElementById('rName1').textContent = c.n1;
@@ -4989,6 +5376,814 @@ document.getElementById('clearAllBtn').addEventListener('click', () => {
 
 renderComparisons();
 
+// ---------- Dicionário de significados ----------
+// Reaproveita o mesmo critério de peso já usado no resto do app (orbe + tier do par
+// pra aspectos via ORB_DECAY_DIVISOR/axisBoost; angularidade da casa via
+// houseMarkerWeightFor) — não reinventa uma escala própria, só ordena por ela.
+const DICT_KEY = 'sinastria_dictionary_v1';
+let dictionary = [];
+try { dictionary = storageAvailable ? (JSON.parse(localStorage.getItem(DICT_KEY)) || []) : []; } catch(e){ dictionary = []; }
+function saveDictionary(){
+  if (!storageAvailable) return;
+  try { localStorage.setItem(DICT_KEY, JSON.stringify(dictionary)); } catch(e){ /* storage indisponível */ }
+}
+
+// Config do "prompt de preenchimento" (nomes, siglas, contexto do vínculo) usada pelo
+// botão "Copiar prompt" de cada linha do dicionário. Guardada por sinastria (mesmo id
+// de `comparisons`), porque a sigla de cada pessoa vem do relatório astrológico colado
+// (ex: "VL", "MP") e não tem por que bater entre sinastrias diferentes.
+const PROMPT_CFG_KEY = 'sinastria_prompt_config_v1';
+let promptConfigs = {};
+try { promptConfigs = storageAvailable ? (JSON.parse(localStorage.getItem(PROMPT_CFG_KEY)) || {}) : {}; } catch(e){ promptConfigs = {}; }
+function savePromptConfigs(){
+  if (!storageAvailable) return;
+  try { localStorage.setItem(PROMPT_CFG_KEY, JSON.stringify(promptConfigs)); } catch(e){ /* storage indisponível */ }
+}
+
+// Varre os aspectos e posições de casa já interpretados (parseText) e devolve as duas
+// primeiras siglas distintas encontradas, na ordem em que aparecem no texto — essas
+// siglas (ex: "DD", "MEV") são exatamente o que o software de astrologia usa antes do
+// "'s" em cada linha, então não têm relação com o nome digitado em "Pessoa 1/2".
+function detectSiglasFromParsed(parsed){
+  const found = [];
+  const pushSigla = (s) => { if (s && !found.includes(s)) found.push(s); };
+  (parsed.aspects || []).forEach(a => { pushSigla(a.p1); pushSigla(a.p2); });
+  (parsed.houses || []).forEach(h => { pushSigla(h.p1); pushSigla(h.p2); });
+  return found.slice(0, 2);
+}
+
+// Retorna a config da sinastria atual, criando um default (nomes vindos de c.n1/c.n2,
+// siglas detectadas automaticamente a partir do texto colado, contexto vazio) na
+// primeira vez que essa sinastria é aberta na aba.
+function getPromptConfig(synastryId){
+  const key = String(synastryId);
+  if (!promptConfigs[key]){
+    const c = comparisons.find(x => x.id === synastryId);
+    let sigla1 = '', sigla2 = '';
+    if (c && c.raw){
+      try {
+        const detected = detectSiglasFromParsed(parseText(c.raw));
+        sigla1 = detected[0] || '';
+        sigla2 = detected[1] || '';
+      } catch(e){ /* raw ilegível, deixa as siglas em branco */ }
+    }
+    promptConfigs[key] = { name1: c ? (c.n1 || '') : '', sigla1, name2: c ? (c.n2 || '') : '', sigla2, context: '' };
+    savePromptConfigs();
+  }
+  return promptConfigs[key];
+}
+
+function setPromptConfigField(synastryId, field, value){
+  const cfg = getPromptConfig(synastryId);
+  cfg[field] = value;
+  savePromptConfigs();
+}
+
+// "Nome (SIGLA)" — se faltar nome ou sigla, cai pro que tiver disponível.
+function formatPromptPerson(name, sigla){
+  name = (name || '').trim();
+  sigla = (sigla || '').trim();
+  if (name && sigla) return `${name} (${sigla})`;
+  return name || sigla || '?';
+}
+
+// Monta o prompt padrão de preenchimento: "Em no máximo dois parágrafos, forneça o
+// significado de [aspecto] entre [Nome1 (Sigla1)] e [Nome2 (Sigla2)], num contexto de
+// [definição do vínculo]." — o [aspecto] é exatamente o texto de "Nesta sinastria:"
+// daquela linha (mesmo texto vindo de instanceLines em initDictRowBody).
+function buildDictPrompt(aspectText, cfg){
+  const p1 = formatPromptPerson(cfg.name1, cfg.sigla1);
+  const p2 = formatPromptPerson(cfg.name2, cfg.sigla2);
+  const context = (cfg.context || '').trim();
+  const contextPart = context ? `, num contexto de ${context}` : '';
+  return `Em no máximo dois parágrafos, forneça o significado de ${aspectText} entre ${p1} e ${p2}${contextPart}.`;
+}
+
+async function copyTextToClipboard(text){
+  if (navigator.clipboard && navigator.clipboard.writeText){
+    try { await navigator.clipboard.writeText(text); return true; } catch(e){ /* cai pro fallback abaixo */ }
+  }
+  try {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    return true;
+  } catch(e){ return false; }
+}
+
+function renderPromptConfigPreview(cfg){
+  const preview = document.getElementById('dictPromptCfgPreview');
+  if (!preview) return;
+  const example = buildDictPrompt('[aspecto ou posição da linha]', cfg);
+  preview.innerHTML = `<strong>Prévia:</strong> ${escapeHtml(example)}`;
+}
+
+function renderPromptConfigPanel(synastryId){
+  const cfg = getPromptConfig(synastryId);
+  document.getElementById('pcName1').value = cfg.name1 || '';
+  document.getElementById('pcSigla1').value = cfg.sigla1 || '';
+  document.getElementById('pcName2').value = cfg.name2 || '';
+  document.getElementById('pcSigla2').value = cfg.sigla2 || '';
+  document.getElementById('pcContext').value = cfg.context || '';
+  renderPromptConfigPreview(cfg);
+}
+
+[['pcName1','name1'],['pcSigla1','sigla1'],['pcName2','name2'],['pcSigla2','sigla2'],['pcContext','context']].forEach(([elId, field]) => {
+  document.getElementById(elId).addEventListener('input', (e) => {
+    if (currentDictSynastryId === null) return;
+    setPromptConfigField(currentDictSynastryId, field, e.target.value);
+    renderPromptConfigPreview(getPromptConfig(currentDictSynastryId));
+  });
+});
+
+document.getElementById('dictPromptCfgHead').addEventListener('click', () => {
+  document.getElementById('dictPromptCfg').classList.toggle('open');
+});
+
+document.getElementById('pcDetectSiglas').addEventListener('click', () => {
+  if (currentDictSynastryId === null) return;
+  const c = comparisons.find(x => x.id === currentDictSynastryId);
+  if (!c || !c.raw){ alert('Essa sinastria não tem o texto original salvo, então não dá pra detectar as siglas automaticamente.'); return; }
+  let detected;
+  try { detected = detectSiglasFromParsed(parseText(c.raw)); }
+  catch(e){ alert('Não consegui ler o texto desta sinastria pra detectar as siglas.'); return; }
+  if (detected.length === 0){ alert('Nenhuma sigla encontrada nos aspectos/posições desta sinastria.'); return; }
+  const cfg = getPromptConfig(currentDictSynastryId);
+  if (detected[0]) cfg.sigla1 = detected[0];
+  if (detected[1]) cfg.sigla2 = detected[1];
+  savePromptConfigs();
+  renderPromptConfigPanel(currentDictSynastryId);
+});
+
+function escapeHtml(str){
+  return String(str).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+// Assinatura direção-neutra (Sol trígono Lua == Lua trígono Sol) — cobre o caso mais
+// comum de reutilização entre sinastrias, onde o que importa é o par de planetas e o
+// tipo de aspecto, não quem colou como Pessoa 1 ou Pessoa 2 no relatório.
+function aspectSignature(a){
+  const pair = [a.planet1, a.planet2].sort();
+  return `ASPECT|${pair[0]}|${pair[1]}|${a.aspect}`;
+}
+function aspectPatternLabel(a){
+  const pair = [a.planet1, a.planet2].sort();
+  const l1 = PLANET_LABEL_PT[pair[0]] || pair[0];
+  const l2 = PLANET_LABEL_PT[pair[1]] || pair[1];
+  const asp = ASPECT_LABEL_PT[a.aspect] || a.aspect;
+  return `${l1} ${asp} ${l2}`;
+}
+// Mesma fórmula usada em computeScores: decaimento exponencial por orbe (varia por
+// tipo de aspecto) × boost de eixo/tier do par (AXIS_BOOST via axisBoost — pares sem
+// entrada específica caem no genérico 1.0, então TODO aspecto reconhecido entra aqui,
+// mesmo os sem peso extra de categoria/eixo).
+function aspectWeight(a){
+  const orbW = Math.exp(-a.orb / (ORB_DECAY_DIVISOR[a.aspect] || 2.5));
+  return orbW * axisBoost(a.planet1, a.planet2);
+}
+function houseSignature(h){
+  return `HOUSE|${h.planet}|${h.house}`;
+}
+function housePatternLabel(h){
+  return `${PLANET_LABEL_PT[h.planet] || h.planet} na Casa ${h.house}`;
+}
+// Casa não tem orbe pra graduar — usa o mesmo peso fixo por angularidade
+// (houseMarkerWeightFor) já usado no resto do app.
+function houseWeight(h){
+  return houseMarkerWeightFor(h.house);
+}
+
+// Agrupa aspectos + casas reconhecidos nesta sinastria por padrão (assinatura),
+// guardando as instâncias reais (pra mostrar orbe/pessoas de contexto) e o maior peso
+// entre elas, depois ordena do mais pro menos importante.
+// Classifica um padrão em harmônico/ambivalente/desarmônico (pro filtro do dicionário) —
+// reaproveita harmonicFraction+markerCategory (mesma lógica já usada nas barras de
+// categoria e nos chips de eixo). tenseLight e tense colapsam num único "desarmônico"
+// pro filtro, já que a distinção fina entre os dois não é o que a pessoa normalmente
+// quer separar aqui (é mais "flui" vs "flui com ressalva" vs "atrita" — 3 baldes, não
+// 4). Casa não tem orbe/sinal pra graduar harmonia (é presença, não fricção — ver
+// comentário em categoryPoolForHouse), então retorna null: não aparece em nenhum dos 3
+// filtros de harmonia, só nos de categoria/eixo.
+function patternFlavor(pattern){
+  if (pattern.kind !== 'aspect') return null;
+  const a = pattern.instances[0];
+  const sameSign = a.sign1 && a.sign2 ? (a.sign1.toLowerCase() === a.sign2.toLowerCase()) : true;
+  const cat = markerCategory(harmonicFraction(a.aspect, a.planet1, a.planet2, sameSign));
+  // tenseLight vira seu próprio flavor (não mais colapsado em 'tense') — sem isso, um
+  // aspecto calibrado como "fricção real, mas um degrau mais brando" (ex: Ascendente
+  // oposição Júpiter, 0.3) aparecia no Dicionário com o mesmo 🔴 "Desarmônico" de um
+  // maléfico puro tipo Marte-Saturno (0.0–0.2), escondendo justamente a distinção que
+  // markerCategory foi desenhada pra preservar (ver comentário em markerCategory).
+  return cat; // 'harmonic' | 'ambivalent' | 'tenseLight' | 'tense'
+}
+
+// Categorias de conteúdo do padrão (reaproveita categoryPoolFor/categoryPoolForHouse —
+// mesmo checklist curado usado nas barras "Marcadores por área"). Pode retornar mais de
+// uma (pares double-dipping, ex: Vênus-Marte) ou nenhuma (padrão reconhecido pelo
+// parser mas sem curadoria de categoria, ex: aspectos genéricos entre pontos externos).
+function patternCategories(pattern){
+  const a = pattern.instances[0];
+  if (pattern.kind === 'aspect') return categoryPoolFor(a.planet1, a.planet2) || [];
+  return categoryPoolForHouse(a.planet, a.house) || [];
+}
+
+// Eixo (Estrutura/Destino) do padrão. Pro lado de casa, espelha o mesmo empurrão
+// estrutural/destino já usado em computeScores (Sol/Lua/Saturno ou Nodo/Vértice numa
+// das quatro casas de MARRIAGE_HOUSES) — não existe uma função genérica separada pra
+// isso porque, até agora, só era calculado inline ali dentro do loop de agregação.
+function patternAxis(pattern){
+  const a = pattern.instances[0];
+  if (pattern.kind === 'aspect') return axisPoolFor(a.planet1, a.planet2);
+  if (MARRIAGE_HOUSES.has(a.house) && (a.planet === 'Sun' || a.planet === 'Moon' || a.planet === 'Saturn')) return 'structure';
+  if (MARRIAGE_HOUSES.has(a.house) && DESTINY_ANCHORS.has(a.planet)) return 'destiny';
+  return null;
+}
+
+// Um padrão é "só informativo" (mesmo termo/ícone 📝 já usado no agrupamento dos chips
+// de "Marcadores por área" — grupo 4, GROUP_META) quando não entra em NENHUM dos outros
+// filtros: sem eixo, sem categoria e sem harmonia própria. Na prática isso é quase
+// sempre casa (planeta numa casa sem curadoria de categoria — a maioria das casas do
+// relatório, já que só um punhado de pares planeta+casa está em HOUSE_CATEGORY_MARKERS/
+// MARRIAGE_HOUSES) — aspecto sempre tem flavor (harmônico/ambivalente/desarmônico), então
+// só cai aqui se também não tiver nem categoria nem eixo, o que hoje não acontece (todo
+// aspecto reconhecido pelo parser cai em pelo menos harmonicFraction). Não travado nisso
+// de propósito: se um dia existir um tipo de padrão sem harmonia própria E sem categoria
+// nem eixo, ele entra aqui automaticamente, sem precisar checar `kind`.
+function patternIsInformative(pattern){
+  return !pattern.flavor && pattern.categories.length === 0 && !pattern.axis;
+}
+
+function buildDictionaryPatterns(parsed){
+  const map = new Map();
+  for (const a of parsed.aspects){
+    const sig = aspectSignature(a);
+    const w = aspectWeight(a);
+    if (!map.has(sig)) map.set(sig, { kind:'aspect', signature: sig, label: aspectPatternLabel(a), weight: w, instances: [] });
+    const entry = map.get(sig);
+    entry.instances.push(a);
+    if (w > entry.weight) entry.weight = w;
+  }
+  for (const h of parsed.houses){
+    const sig = houseSignature(h);
+    const w = houseWeight(h);
+    if (!map.has(sig)) map.set(sig, { kind:'house', signature: sig, label: housePatternLabel(h), weight: w, instances: [] });
+    map.get(sig).instances.push(h);
+  }
+  const patterns = Array.from(map.values());
+  patterns.forEach(p => {
+    p.flavor = patternFlavor(p);
+    p.categories = patternCategories(p);
+    p.axis = patternAxis(p);
+    p.informative = patternIsInformative(p);
+  });
+  return patterns.sort((x,y) => y.weight - x.weight);
+}
+
+// Aplica o filtro selecionado em #dictFilterSelect sobre a lista já construída por
+// buildDictionaryPatterns. filterValue vem no formato "tipo:valor" (ex:
+// "flavor:harmonic", "cat:sexual", "axis:structure"), "informative" ou "all".
+function applyDictFilter(patterns, filterValue){
+  if (!filterValue || filterValue === 'all') return patterns;
+  if (filterValue === 'informative') return patterns.filter(p => p.informative);
+  const [kind, value] = filterValue.split(':');
+  if (kind === 'flavor') return patterns.filter(p => p.flavor === value);
+  if (kind === 'cat') return patterns.filter(p => p.categories.includes(value));
+  if (kind === 'axis') return patterns.filter(p => p.axis === value);
+  return patterns;
+}
+
+function findDictEntry(signature, scope, relType, synastryId){
+  return dictionary.find(e => e.signature === signature && e.scope === scope &&
+    (scope === 'unique' ? e.synastryId === synastryId : scope === 'global_type' ? e.relType === relType : true));
+}
+// Prioridade de exibição quando existe mais de uma versão salva pro mesmo padrão:
+// nota única desta sinastria > reutilizável só deste tipo de vínculo > reutilizável geral.
+function findBestDictEntry(signature, relType, synastryId){
+  return findDictEntry(signature, 'unique', null, synastryId)
+    || findDictEntry(signature, 'global_type', relType, synastryId)
+    || findDictEntry(signature, 'global_all', null, synastryId);
+}
+
+function renderDictionaryPanel(parsed, relType, synastryId){
+  const container = document.getElementById('dictionaryList');
+  const allPatterns = buildDictionaryPatterns(parsed);
+  const filterValue = document.getElementById('dictFilterSelect').value;
+  const patterns = applyDictFilter(allPatterns, filterValue);
+  container.innerHTML = '';
+  if (allPatterns.length === 0){
+    container.innerHTML = '<div class="dict-empty">Nenhum aspecto ou casa reconhecido nesta sinastria.</div>';
+    return;
+  }
+  if (patterns.length === 0){
+    container.innerHTML = '<div class="dict-empty">Nenhum padrão desse filtro nesta sinastria.</div>';
+    return;
+  }
+  const toggleAllBtn = document.getElementById('toggleAllDictBtn');
+  if (toggleAllBtn) toggleAllBtn.textContent = 'Expandir tudo';
+
+  patterns.forEach(pattern => {
+    const row = document.createElement('div');
+    row.className = 'dict-row';
+    if (findBestDictEntry(pattern.signature, relType, synastryId)) row.classList.add('has-entry');
+
+    const head = document.createElement('div');
+    head.className = 'dict-row-head';
+    renderDictRowHead(row, head, pattern);
+    head.addEventListener('click', () => {
+      row.classList.toggle('open');
+      if (row.classList.contains('open')){
+        body.querySelectorAll('.dict-text-input').forEach(ta => autoGrowTextarea(ta));
+      }
+    });
+
+    const body = document.createElement('div');
+    body.className = 'dict-row-body';
+
+    row.appendChild(head);
+    row.appendChild(body);
+    container.appendChild(row);
+
+    initDictRowBody(row, body, pattern, relType, synastryId);
+  });
+}
+
+// Redesenha só o cabeçalho (título + badges) de uma linha do dicionário — chamada tanto
+// na criação da linha quanto depois de salvar/remover um significado, pra refletir o
+// "has-entry" na hora, sem precisar recarregar a página ou trocar de sinastria.
+// FLAVOR_ICON: mesmo par de círculos usado em formatMarkerDetail (🟢/🟡/🔴), pra
+// identificar de cara se o padrão é harmônico/ambivalente/desarmônico — padrões sem
+// flavor (a maioria das casas, sem curadoria própria de harmonia) não recebem ícone.
+const DICT_FLAVOR_ICON = { harmonic:'🟢', ambivalent:'🟡', tenseLight:'🟠', tense:'🔴' };
+function renderDictRowHead(row, head, pattern){
+  const hasEntry = row.classList.contains('has-entry');
+  const kindIcon = pattern.kind === 'aspect' ? '🪐' : '🏠';
+  const countBadge = pattern.instances.length > 1
+    ? ` <span title="Aparece ${pattern.instances.length}x nesta sinastria">×${pattern.instances.length}</span>` : '';
+  const flavorIcon = DICT_FLAVOR_ICON[pattern.flavor] || '';
+  head.innerHTML = `
+    <div class="dict-row-title">${hasEntry ? '<span class="dict-dot" title="Já tem significado cadastrado"></span>' : ''}${flavorIcon ? `<span class="flavor-icon" title="${DICT_FLAVOR_LABEL[pattern.flavor]}">${flavorIcon}</span> ` : ''}<span class="kind-icon">${kindIcon}</span>${pattern.label}${countBadge}</div>
+    <div class="dict-row-meta">
+      <span class="dict-weight-badge">peso ${pattern.weight.toFixed(2)}</span>
+      ${hasEntry ? '<span class="dict-saved-badge">✓ preenchido</span>' : ''}
+    </div>`;
+}
+const DICT_FLAVOR_LABEL = { harmonic:'Harmônico', ambivalent:'Ambivalente', tenseLight:'Tenso leve', tense:'Desarmônico' };
+
+
+// ---------- Aba do Dicionário: qual sinastria salva está sendo vista ----------
+// O dicionário virou uma aba própria (antes ficava dentro dos resultados da
+// calculadora, então só mostrava linhas logo depois de clicar "Calcular" — se a
+// pessoa recarregasse a página ou abrisse a aba direto, a lista ficava vazia). Agora
+// ela sempre lê o texto bruto (c.raw) de uma sinastria já salva na lista de
+// comparação, escolhida no seletor abaixo do título.
+let currentDictSynastryId = null;
+
+function dictSelectLabel(c){
+  const relLabel = { romantico:'Romântico', amizade:'Amizade', familia:'Família' }[c.relType] || c.relType || '';
+  return `${c.n1 || '?'} & ${c.n2 || '?'} — ${relLabel}`;
+}
+
+let currentDictFilter = 'all';
+
+// Rótulo da categoria "sexual" muda por tipo de vínculo (ver SEXUAL_LABEL_BY_TYPE /
+// catMetaFor) — repopula as opções de categoria toda vez que a sinastria selecionada
+// muda, pra sempre bater com o relType dela. currentDictFilter é preservado entre
+// trocas de sinastria (só reseta pra "all" se, por algum motivo, o valor selecionado
+// deixasse de existir — não deveria acontecer hoje, já que as chaves são fixas).
+function populateDictFilterOptions(relType){
+  const select = document.getElementById('dictFilterSelect');
+  const catMeta = catMetaFor(relType || 'romantico');
+  const catOptions = CATEGORY_KEYS.map(key => `<option value="cat:${key}">${catMeta[key].label}</option>`).join('');
+  select.innerHTML = `
+    <option value="all">Todos os padrões</option>
+    <optgroup label="Harmonia">
+      <option value="flavor:harmonic">Harmônico</option>
+      <option value="flavor:ambivalent">Ambivalente</option>
+      <option value="flavor:tenseLight">Tenso leve</option>
+      <option value="flavor:tense">Desarmônico</option>
+    </optgroup>
+    <optgroup label="Categoria">${catOptions}</optgroup>
+    <optgroup label="Eixo">
+      <option value="axis:structure">Estrutura</option>
+      <option value="axis:destiny">Destino</option>
+    </optgroup>
+    <optgroup label="Outros">
+      <option value="informative">Só informativo</option>
+    </optgroup>`;
+  select.value = currentDictFilter;
+  if (select.value !== currentDictFilter){ currentDictFilter = 'all'; select.value = 'all'; }
+}
+document.getElementById('dictFilterSelect').addEventListener('change', (e) => {
+  currentDictFilter = e.target.value;
+  renderDictionaryForCurrentSelection();
+});
+
+document.getElementById('toggleAllDictBtn').addEventListener('click', (e) => {
+  const rows = document.querySelectorAll('#dictionaryList .dict-row');
+  if (rows.length === 0) return;
+  const anyClosed = Array.from(rows).some(r => !r.classList.contains('open'));
+  rows.forEach(r => {
+    r.classList.toggle('open', anyClosed);
+    if (anyClosed) r.querySelectorAll('.dict-text-input').forEach(ta => autoGrowTextarea(ta));
+  });
+  e.target.textContent = anyClosed ? 'Colapsar tudo' : 'Expandir tudo';
+});
+
+function refreshDictSynastryOptions(){
+  const select = document.getElementById('dictSynastrySelect');
+  const selectRows = document.querySelectorAll('.dict-select-row');
+  if (comparisons.length === 0){
+    selectRows.forEach(row => row.style.display = 'none');
+    select.innerHTML = '';
+    currentDictSynastryId = null;
+    document.getElementById('dictPromptCfg').style.display = 'none';
+    document.getElementById('dictionaryList').innerHTML =
+      '<div class="dict-empty">Calcule ao menos uma sinastria na aba Calculadora pra usar o dicionário.</div>';
+    return;
+  }
+  selectRows.forEach(row => row.style.display = '');
+  document.getElementById('dictPromptCfg').style.display = '';
+  const sorted = [...comparisons].sort((a,b) => dictSelectLabel(a).localeCompare(dictSelectLabel(b), 'pt-BR', { sensitivity:'base' }));
+  const stillValid = comparisons.some(c => c.id === currentDictSynastryId);
+  currentDictSynastryId = stillValid ? currentDictSynastryId : sorted[0].id;
+  select.innerHTML = sorted.map(c =>
+    `<option value="${c.id}" ${c.id === currentDictSynastryId ? 'selected' : ''}>${dictSelectLabel(c)}</option>`
+  ).join('');
+  renderDictionaryForCurrentSelection();
+}
+
+function renderDictionaryForCurrentSelection(){
+  const container = document.getElementById('dictionaryList');
+  const c = comparisons.find(x => x.id === currentDictSynastryId);
+  if (!c){
+    container.innerHTML = '<div class="dict-empty">Calcule ao menos uma sinastria na aba Calculadora pra usar o dicionário.</div>';
+    return;
+  }
+  populateDictFilterOptions(c.relType);
+  renderPromptConfigPanel(c.id);
+  if (!c.raw){
+    container.innerHTML = '<div class="dict-empty">Essa sinastria não tem o texto original salvo (entrada antiga ou importada sem ele), então não dá pra recalcular os padrões dela aqui.</div>';
+    return;
+  }
+  renderDictionaryPanel(parseText(c.raw), c.relType || 'romantico', c.id);
+}
+
+document.getElementById('dictSynastrySelect').addEventListener('change', (e) => {
+  currentDictSynastryId = Number(e.target.value);
+  renderDictionaryForCurrentSelection();
+});
+
+function switchMainTab(tabId){
+  document.querySelectorAll('.tab-view').forEach(el => el.classList.toggle('active', el.id === tabId));
+  document.querySelectorAll('.main-tab-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.tab === tabId));
+  if (tabId === 'dictTab') refreshDictSynastryOptions();
+  if (tabId === 'reportTab') renderReportSynastryList();
+}
+document.getElementById('tabBtnCalc').addEventListener('click', () => switchMainTab('calcTab'));
+document.getElementById('tabBtnDict').addEventListener('click', () => switchMainTab('dictTab'));
+document.getElementById('tabBtnReport').addEventListener('click', () => switchMainTab('reportTab'));
+
+function autoGrowTextarea(ta){
+  ta.style.height = 'auto';
+  ta.style.height = ta.scrollHeight + 'px';
+}
+
+function initDictRowBody(row, body, pattern, relType, synastryId){
+  const initial = findBestDictEntry(pattern.signature, relType, synastryId);
+  const state = {
+    scope: initial ? initial.scope : 'unique',
+    relTypeSel: (initial && initial.scope === 'global_type') ? initial.relType : relType,
+    sameForAll: initial && typeof initial.sameForAll === 'boolean' ? initial.sameForAll : true,
+    texts: initial ? { ...initial.texts } : {},
+  };
+
+  const scopeMatcher = (st) => e => e.signature === pattern.signature && e.kind === pattern.kind && e.scope === st.scope &&
+    (st.scope === 'unique' ? e.synastryId === synastryId : st.scope === 'global_type' ? e.relType === st.relTypeSel : true);
+
+  function draw(){
+    const instanceLines = pattern.instances.slice(0, 6).map(inst => pattern.kind === 'aspect'
+      ? formatMarkerDetail(inst)
+      : `${inst.p1} (${PLANET_LABEL_PT[inst.planet] || inst.planet}) na ${inst.house}ª de ${inst.p2}`
+    ).join(' · ');
+
+    let textFieldsHtml = '';
+    if (state.scope === 'global_all'){
+      textFieldsHtml += `
+        <label class="dict-repeat-toggle">
+          <input type="checkbox" class="dict-same-toggle" ${state.sameForAll ? 'checked' : ''}>
+          Repetir o mesmo texto pra Romântico, Amizade e Família (desligue pra escrever versões diferentes)
+        </label>`;
+      textFieldsHtml += state.sameForAll ? `
+          <div class="dict-text-group">
+            <div class="dict-text-field">
+              <label>Significado (todos os vínculos)</label>
+              <textarea class="dict-text-input" data-slot="all" placeholder="Escreva o significado...">${escapeHtml(state.texts.all || '')}</textarea>
+            </div>
+          </div>` : `
+          <div class="dict-text-group">
+            <div class="dict-text-field"><label>Romântico</label><textarea class="dict-text-input" data-slot="romantico" placeholder="Significado no romance...">${escapeHtml(state.texts.romantico || '')}</textarea></div>
+            <div class="dict-text-field"><label>Amizade</label><textarea class="dict-text-input" data-slot="amizade" placeholder="Significado na amizade...">${escapeHtml(state.texts.amizade || '')}</textarea></div>
+            <div class="dict-text-field"><label>Família</label><textarea class="dict-text-input" data-slot="familia" placeholder="Significado em família...">${escapeHtml(state.texts.familia || '')}</textarea></div>
+          </div>`;
+    } else {
+      textFieldsHtml += `
+        <div class="dict-text-group">
+          <div class="dict-text-field">
+            <label>Significado</label>
+            <textarea class="dict-text-input" data-slot="single" placeholder="Escreva o significado...">${escapeHtml(state.texts.single || '')}</textarea>
+          </div>
+        </div>`;
+    }
+
+    const hasSavedForState = dictionary.some(scopeMatcher(state));
+
+    body.innerHTML = `
+      <div class="dict-row-instance">Nesta sinastria: ${instanceLines}</div>
+      <div class="dict-scope-row">
+        <div class="field">
+          <label>Aplicação deste significado</label>
+          <select class="field-select dict-scope-select">
+            <option value="unique" ${state.scope==='unique'?'selected':''}>Só nesta sinastria</option>
+            <option value="global_all" ${state.scope==='global_all'?'selected':''}>Reutilizável — qualquer vínculo</option>
+            <option value="global_type" ${state.scope==='global_type'?'selected':''}>Reutilizável — só um tipo de vínculo</option>
+          </select>
+        </div>
+        ${state.scope === 'global_type' ? `
+        <div class="field">
+          <label>Qual tipo de vínculo</label>
+          <select class="field-select dict-reltype-select">
+            <option value="romantico" ${state.relTypeSel==='romantico'?'selected':''}>Romântico</option>
+            <option value="amizade" ${state.relTypeSel==='amizade'?'selected':''}>Amizade</option>
+            <option value="familia" ${state.relTypeSel==='familia'?'selected':''}>Família</option>
+          </select>
+        </div>` : ''}
+      </div>
+      ${textFieldsHtml}
+      <div class="dict-row-actions">
+        <button type="button" class="dict-save-btn">Salvar significado</button>
+        <button type="button" class="ghost-btn dict-copy-btn">Copiar prompt</button>
+        <button type="button" class="ghost-btn dict-copy-aspect-btn">Copiar aspecto</button>
+        ${hasSavedForState ? '<button type="button" class="ghost-btn dict-delete-btn">Remover</button>' : ''}
+        <span class="dict-save-note">Salvo ✓</span>
+        <span class="dict-copy-note">Copiado ✓</span>
+        <span class="dict-copy-aspect-note">Copiado ✓</span>
+      </div>
+    `;
+
+    body.querySelector('.dict-scope-select').addEventListener('change', (e) => {
+      state.scope = e.target.value;
+      const found = state.scope === 'unique' ? findDictEntry(pattern.signature, 'unique', null, synastryId)
+        : state.scope === 'global_type' ? findDictEntry(pattern.signature, 'global_type', state.relTypeSel, synastryId)
+        : findDictEntry(pattern.signature, 'global_all', null, synastryId);
+      state.texts = found ? { ...found.texts } : {};
+      state.sameForAll = found && typeof found.sameForAll === 'boolean' ? found.sameForAll : true;
+      draw();
+    });
+
+    const relSel = body.querySelector('.dict-reltype-select');
+    if (relSel){
+      relSel.addEventListener('change', (e) => {
+        state.relTypeSel = e.target.value;
+        const found = findDictEntry(pattern.signature, 'global_type', state.relTypeSel, synastryId);
+        state.texts = found ? { ...found.texts } : {};
+        draw();
+      });
+    }
+
+    const sameToggle = body.querySelector('.dict-same-toggle');
+    if (sameToggle){
+      sameToggle.addEventListener('change', (e) => {
+        state.sameForAll = e.target.checked;
+        draw();
+      });
+    }
+
+    body.querySelectorAll('.dict-text-input').forEach(ta => {
+      autoGrowTextarea(ta);
+      ta.addEventListener('input', (e) => {
+        state.texts[e.target.dataset.slot] = e.target.value;
+        autoGrowTextarea(e.target);
+      });
+    });
+
+    body.querySelector('.dict-save-btn').addEventListener('click', () => {
+      saveDictRowEntry(pattern, state, synastryId);
+      row.classList.add('has-entry');
+      refreshDictRowHead(row, pattern);
+      const note = body.querySelector('.dict-save-note');
+      note.classList.add('show');
+      setTimeout(() => note.classList.remove('show'), 1600);
+      draw();
+    });
+
+    body.querySelector('.dict-copy-btn').addEventListener('click', async () => {
+      const cfg = getPromptConfig(synastryId);
+      const promptText = buildDictPrompt(instanceLines, cfg);
+      const ok = await copyTextToClipboard(promptText);
+      const note = body.querySelector('.dict-copy-note');
+      note.textContent = ok ? 'Copiado ✓' : 'Não foi possível copiar';
+      note.classList.add('show');
+      setTimeout(() => note.classList.remove('show'), 1600);
+    });
+
+    body.querySelector('.dict-copy-aspect-btn').addEventListener('click', async () => {
+      const ok = await copyTextToClipboard(instanceLines);
+      const note = body.querySelector('.dict-copy-aspect-note');
+      note.textContent = ok ? 'Copiado ✓' : 'Não foi possível copiar';
+      note.classList.add('show');
+      setTimeout(() => note.classList.remove('show'), 1600);
+    });
+
+    const delBtn = body.querySelector('.dict-delete-btn');
+    if (delBtn){
+      delBtn.addEventListener('click', () => {
+        deleteDictRowEntry(pattern, state, synastryId);
+        state.texts = {};
+        if (!dictionary.some(e => e.signature === pattern.signature && e.kind === pattern.kind)) row.classList.remove('has-entry');
+        refreshDictRowHead(row, pattern);
+        draw();
+      });
+    }
+  }
+
+  draw();
+}
+
+// Reconstrói o cabeçalho de uma linha já existente a partir do pattern (usado depois de
+// salvar/remover um significado, pra atualizar o ponto dourado e o badge "preenchido"
+// na hora, sem esperar reabrir a aba ou trocar de sinastria).
+function refreshDictRowHead(row, pattern){
+  const head = row.querySelector('.dict-row-head');
+  if (!head) return;
+  renderDictRowHead(row, head, pattern);
+}
+
+function saveDictRowEntry(pattern, state, synastryId){
+  const hasAnyText = state.scope === 'global_all'
+    ? (state.sameForAll
+        ? !!(state.texts.all || '').trim()
+        : !!((state.texts.romantico || '').trim() || (state.texts.amizade || '').trim() || (state.texts.familia || '').trim()))
+    : !!(state.texts.single || '').trim();
+
+  const matcher = e => e.signature === pattern.signature && e.kind === pattern.kind && e.scope === state.scope &&
+    (state.scope === 'unique' ? e.synastryId === synastryId : state.scope === 'global_type' ? e.relType === state.relTypeSel : true);
+  const idx = dictionary.findIndex(matcher);
+
+  if (!hasAnyText){
+    if (idx !== -1) dictionary.splice(idx, 1);
+    saveDictionary();
+    return;
+  }
+
+  const entry = {
+    id: idx !== -1 ? dictionary[idx].id : (Date.now() + Math.random()),
+    signature: pattern.signature,
+    kind: pattern.kind,
+    label: pattern.label,
+    scope: state.scope,
+    relType: state.scope === 'global_type' ? state.relTypeSel : null,
+    synastryId: state.scope === 'unique' ? synastryId : null,
+    sameForAll: state.scope === 'global_all' ? state.sameForAll : null,
+    texts: { ...state.texts },
+    updatedAt: Date.now(),
+  };
+
+  if (idx !== -1) dictionary[idx] = entry; else dictionary.push(entry);
+  saveDictionary();
+}
+
+function deleteDictRowEntry(pattern, state, synastryId){
+  const matcher = e => e.signature === pattern.signature && e.kind === pattern.kind && e.scope === state.scope &&
+    (state.scope === 'unique' ? e.synastryId === synastryId : state.scope === 'global_type' ? e.relType === state.relTypeSel : true);
+  const idx = dictionary.findIndex(matcher);
+  if (idx !== -1){ dictionary.splice(idx, 1); saveDictionary(); }
+}
+
+// Valida uma entrada de dicionário vinda de um JSON importado — só aceita o formato
+// atual (assinatura + escopo + textos); qualquer coisa fora disso é ignorada em vez de
+// travar a importação inteira.
+function validateImportedDictEntry(obj){
+  if (!obj || typeof obj !== 'object') return null;
+  if (typeof obj.signature !== 'string' || !obj.signature) return null;
+  if (!['aspect','house'].includes(obj.kind)) return null;
+  if (!['unique','global_all','global_type'].includes(obj.scope)) return null;
+  if (!obj.texts || typeof obj.texts !== 'object') return null;
+  return {
+    id: (typeof obj.id === 'number' || typeof obj.id === 'string') ? obj.id : (Date.now() + Math.random()),
+    signature: obj.signature,
+    kind: obj.kind,
+    label: typeof obj.label === 'string' ? obj.label : obj.signature,
+    scope: obj.scope,
+    relType: obj.scope === 'global_type' && ['romantico','amizade','familia'].includes(obj.relType) ? obj.relType : null,
+    // synastryId de uma entrada "unique" só faz sentido se a sinastria correspondente
+    // também existir neste navegador — se não existir, a entrada fica salva mas não
+    // aparece em lugar nenhum até você importar/recriar aquela sinastria com o mesmo id.
+    synastryId: obj.scope === 'unique' ? (obj.synastryId ?? null) : null,
+    sameForAll: obj.scope === 'global_all' ? (obj.sameForAll !== false) : null,
+    texts: {
+      single: typeof obj.texts.single === 'string' ? obj.texts.single : '',
+      all: typeof obj.texts.all === 'string' ? obj.texts.all : '',
+      romantico: typeof obj.texts.romantico === 'string' ? obj.texts.romantico : '',
+      amizade: typeof obj.texts.amizade === 'string' ? obj.texts.amizade : '',
+      familia: typeof obj.texts.familia === 'string' ? obj.texts.familia : '',
+    },
+    updatedAt: typeof obj.updatedAt === 'number' ? obj.updatedAt : Date.now(),
+  };
+}
+
+// Valida uma config de prompt (nomes/siglas/contexto) vinda de um JSON importado —
+// aceita só o formato atual; qualquer coisa fora disso é ignorada.
+function validateImportedPromptConfig(obj){
+  if (!obj || typeof obj !== 'object') return null;
+  return {
+    name1: typeof obj.name1 === 'string' ? obj.name1 : '',
+    sigla1: typeof obj.sigla1 === 'string' ? obj.sigla1 : '',
+    name2: typeof obj.name2 === 'string' ? obj.name2 : '',
+    sigla2: typeof obj.sigla2 === 'string' ? obj.sigla2 : '',
+    context: typeof obj.context === 'string' ? obj.context : '',
+  };
+}
+
+// Importar é um MERGE por (assinatura + escopo + tipo de vínculo/sinastria): se já
+// existir uma entrada igual, o arquivo importado substitui o texto dela (mais recente
+// vence); senão entra como nova. Evita duplicar dicionário toda vez que você importa
+// de novo um backup — diferente do import de "Comparar sinastrias" (aditivo puro), que
+// não faz sentido pra deduplicar sinastrias inteiras, mas faz total sentido aqui.
+// Aceita dois formatos: o antigo (uma lista pura de significados) e o atual (objeto com
+// "dictionary" + "promptConfigs"), pra não quebrar backups exportados antes dos prompts
+// existirem.
+function importDictionaryFromJSON(text){
+  let data;
+  try { data = JSON.parse(text); }
+  catch(e){ alert('Esse arquivo não é um JSON válido.'); return; }
+
+  let dictData, promptData = null;
+  if (Array.isArray(data)){
+    dictData = data;
+  } else if (data && typeof data === 'object' && Array.isArray(data.dictionary)){
+    dictData = data.dictionary;
+    if (data.promptConfigs && typeof data.promptConfigs === 'object') promptData = data.promptConfigs;
+  } else {
+    alert('O JSON precisa estar no formato gerado pelo botão "Exportar JSON" do dicionário.');
+    return;
+  }
+
+  let imported = 0, updated = 0, skipped = 0;
+  dictData.forEach(raw => {
+    const normalized = validateImportedDictEntry(raw);
+    if (!normalized){ skipped++; return; }
+    const matcher = e => e.signature === normalized.signature && e.kind === normalized.kind && e.scope === normalized.scope &&
+      (normalized.scope === 'unique' ? e.synastryId === normalized.synastryId
+        : normalized.scope === 'global_type' ? e.relType === normalized.relType : true);
+    const idx = dictionary.findIndex(matcher);
+    if (idx !== -1){ dictionary[idx] = { ...normalized, id: dictionary[idx].id }; updated++; }
+    else { dictionary.push(normalized); imported++; }
+  });
+  saveDictionary();
+
+  let promptImported = 0, promptSkipped = 0;
+  if (promptData){
+    Object.keys(promptData).forEach(key => {
+      const normalized = validateImportedPromptConfig(promptData[key]);
+      if (!normalized){ promptSkipped++; return; }
+      promptConfigs[key] = normalized;
+      promptImported++;
+    });
+    savePromptConfigs();
+  }
+
+  renderDictionaryForCurrentSelection();
+  const skippedNote = skipped > 0 ? ` (${skipped} ignorada${skipped > 1 ? 's' : ''} por formato inválido)` : '';
+  const promptNote = promptData ? ` · ${promptImported} config${promptImported === 1 ? '' : 's'} de prompt importada${promptImported === 1 ? '' : 's'}${promptSkipped > 0 ? ` (${promptSkipped} ignorada${promptSkipped>1?'s':''})` : ''}` : '';
+  alert(`Importação concluída: ${imported} nova${imported === 1 ? '' : 's'}, ${updated} atualizada${updated === 1 ? '' : 's'}${skippedNote}${promptNote}.`);
+}
+
+document.getElementById('exportDictBtn').addEventListener('click', () => {
+  if (dictionary.length === 0 && Object.keys(promptConfigs).length === 0){
+    alert('Nada pra exportar ainda — cadastre pelo menos um significado ou uma config de prompt primeiro.');
+    return;
+  }
+  const payload = { dictionary, promptConfigs };
+  downloadFile('dicionario-significados.json', JSON.stringify(payload, null, 2), 'application/json');
+});
+document.getElementById('importDictBtn').addEventListener('click', () => {
+  document.getElementById('importDictInput').click();
+});
+document.getElementById('importDictInput').addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => importDictionaryFromJSON(reader.result);
+  reader.onerror = () => alert('Não consegui ler esse arquivo.');
+  reader.readAsText(file);
+  e.target.value = '';
+});
+
 document.getElementById('calcBtn').addEventListener('click', () => {
   const viewBannerEl = document.getElementById('viewBanner');
   viewBannerEl.style.display = 'none';
@@ -5159,12 +6354,276 @@ document.getElementById('calcBtn').addEventListener('click', () => {
     isLuminarySwap, luminarySwapDetail, luminarySwapCategory,
   };
 
+  let synastryId;
   if (editingId !== null){
+    synastryId = editingId;
     updateComparison(editingId, entryData);
     exitEditMode();
   } else {
-    addComparison({ id: Date.now(), ts: Date.now(), ...entryData });
+    synastryId = Date.now();
+    addComparison({ id: synastryId, ts: synastryId, ...entryData });
   }
+
+  currentDictSynastryId = synastryId;
+  refreshDictSynastryOptions();
+});
+
+// ---------- Aba de Relatório ----------
+// A aba lê a mesma lista `comparisons` já usada na aba de Comparação, deixa marcar
+// quais entrar no PDF (via checklist) e monta um HTML autocontido dentro de
+// #reportPrintArea, que só aparece na tela quando a página está em modo impressão
+// (ver @media print no CSS). Gerar o PDF de fato é responsabilidade do navegador —
+// chamamos window.print() e a pessoa escolhe "Salvar como PDF" no destino.
+
+// reportCheckedIds guarda o estado (marcado/desmarcado) de cada sinastria entre uma
+// re-renderização da lista e outra — sem isso, toda vez que a lista fosse redesenhada
+// (ex: trocar de aba e voltar) as marcações escolhidas pela pessoa seriam perdidas.
+// reportKnownIds serve só pra saber quais ids já apareceram alguma vez: uma sinastria
+// nova (calculada depois que a aba já foi aberta) entra marcada por padrão, sem mexer
+// no que já estava marcado/desmarcado nas outras.
+let reportCheckedIds = new Set();
+let reportKnownIds = new Set();
+
+function renderReportSynastryList(){
+  const container = document.getElementById('reportSynastryList');
+  // salva o estado atual da tela antes de redesenhar, senão a própria re-renderização
+  // apagaria as escolhas da pessoa.
+  container.querySelectorAll('input[type=checkbox]').forEach(cb => {
+    const id = Number(cb.value);
+    if (cb.checked) reportCheckedIds.add(id); else reportCheckedIds.delete(id);
+  });
+  if (comparisons.length === 0){
+    container.innerHTML = '<div class="dict-empty">Calcule ao menos uma sinastria na aba Calculadora pra gerar um relatório.</div>';
+    return;
+  }
+  const sorted = [...comparisons].sort((a,b) => dictSelectLabel(a).localeCompare(dictSelectLabel(b), 'pt-BR', { sensitivity:'base' }));
+  sorted.forEach(c => {
+    if (!reportKnownIds.has(c.id)){
+      reportKnownIds.add(c.id);
+      reportCheckedIds.add(c.id); // sinastria nova entra marcada, "tudo marcado por padrão"
+    }
+  });
+  container.innerHTML = sorted.map(c => `
+    <label class="report-check-item">
+      <input type="checkbox" value="${c.id}" ${reportCheckedIds.has(c.id) ? 'checked' : ''}>
+      ${escapeHtml(dictSelectLabel(c))}
+    </label>`).join('');
+}
+
+document.getElementById('reportSelectAllBtn').addEventListener('click', () => {
+  document.querySelectorAll('#reportSynastryList input[type=checkbox]').forEach(cb => cb.checked = true);
+});
+document.getElementById('reportSelectNoneBtn').addEventListener('click', () => {
+  document.querySelectorAll('#reportSynastryList input[type=checkbox]').forEach(cb => cb.checked = false);
+});
+
+function getSelectedReportSynastries(){
+  const container = document.getElementById('reportSynastryList');
+  const ids = Array.from(container.querySelectorAll('input[type=checkbox]:checked')).map(cb => Number(cb.value));
+  // mantém a ordem de cálculo (mais antiga primeiro), não a ordem alfabética da lista
+  return comparisons.filter(c => ids.includes(c.id)).sort((a,b) => (a.ts||0) - (b.ts||0));
+}
+
+function getReportOptions(){
+  return {
+    resumo: document.getElementById('repSecResumo').checked,
+    numeros: document.getElementById('repSecNumeros').checked,
+    categorias: document.getElementById('repSecCategorias').checked,
+    marcadores: document.getElementById('repSecMarcadores').checked,
+    significados: document.getElementById('repSecSignificados').checked,
+    comparativo: document.getElementById('repSecComparativo').checked,
+  };
+}
+
+// Resolve o texto de uma entrada do dicionário pro relType da sinastria em questão —
+// mesma regra usada no editor do dicionário (ver initDictRowBody/saveDictRowEntry):
+// escopo 'unique'/'global_type' guardam um texto só (texts.single); escopo
+// 'global_all' guarda um texto único (texts.all) OU um texto por tipo de vínculo,
+// dependendo de sameForAll.
+function getDictEntryText(entry, relType){
+  if (!entry) return '';
+  if (entry.scope === 'global_all'){
+    return entry.sameForAll ? (entry.texts.all || '') : (entry.texts[relType] || '');
+  }
+  return entry.texts.single || '';
+}
+
+function buildReportVerdictHTML(c){
+  const relType = c.relType || 'romantico';
+  const verdict = c.categoryScores
+    ? classify(c.categoryScores, c.harmonyPct, c.strength, relType, c.immediateHarmonyPct, c.structureHarmonyPct)
+    : { title: c.verdictTitle || '', desc: 'Essa entrada foi calculada com um modelo de categoria antigo — recalcule na aba Comparação pra ver a descrição completa.' };
+  const vinculoHtml = c.vinculoProfile ? `<div class="rprint-vinculo">💍 <strong>${escapeHtml(c.vinculoProfile.label)}</strong>${c.vinculoProfile.destinyNote ? `<div class="rprint-vinculo-note">☊ ${escapeHtml(c.vinculoProfile.destinyNote)}</div>` : ''}</div>` : '';
+  return `${vinculoHtml}<div class="rprint-verdict-title">${escapeHtml(c.verdictTitle || verdict.title)}</div><div class="rprint-verdict-desc">${escapeHtml(verdict.desc)}</div>`;
+}
+
+function buildReportStatsHTML(c){
+  const compat = c.compatibilityScore != null ? c.compatibilityScore + '%' : '—';
+  const potential = c.potentialScore != null ? c.potentialScore : '—';
+  const harmony = c.harmonyPct != null ? c.harmonyPct + '%' : '—';
+  const structure = c.structureHarmonyPct != null ? c.structureHarmonyPct + '%' : '—';
+  const destiny = c.destinyHarmonyPct != null ? c.destinyHarmonyPct + '%' : '—';
+  const strength = c.strength != null ? c.strength : '—';
+  const stat = (v, l, hl) => `<div class="rprint-stat${hl ? ' highlight' : ''}"><div class="v">${v}</div><div class="l">${l}</div></div>`;
+  return `<div class="rprint-stats-grid">${stat(compat,'Compatibilidade',true)}${stat(potential,'Veredito')}${stat(harmony,'Harmonia')}${stat(structure,'Estrutura')}${stat(destiny,'Destino')}${stat(strength,'Nitidez')}</div>`;
+}
+
+function buildReportCategoryHTML(categoryScores, relType){
+  if (!categoryScores) return '<p class="rprint-empty-note">Categorias não disponíveis para esta entrada (modelo antigo) — recalcule na aba Comparação.</p>';
+  const catMeta = catMetaFor(relType);
+  return CATEGORY_KEYS.map(key => {
+    const meta = catMeta[key];
+    const d = categoryScores[key] || { presence:0, harmonyPct:null, eligibleCount:0 };
+    const valLabel = d.eligibleCount === 0 ? 'sem marcadores' : (d.harmonyPct !== null ? `presença ${d.presence} · ${d.harmonyPct}% favorável` : '—');
+    const harmWidth = d.harmonyPct !== null ? (d.presence * d.harmonyPct / 100) : 0;
+    const tenseWidth = d.harmonyPct !== null ? (d.presence * (100 - d.harmonyPct) / 100) : 0;
+    return `<div class="rprint-cat-row">
+      <div class="rprint-cat-label">${escapeHtml(meta.label)}</div>
+      <div class="rprint-cat-bar-track"><div class="rprint-cat-fill" style="width:${harmWidth}%; background:${CATEGORY_HARMONIC_COLOR}"></div><div class="rprint-cat-fill" style="width:${tenseWidth}%; background:#c9707a"></div></div>
+      <div class="rprint-cat-pct">${valLabel}</div>
+    </div>`;
+  }).join('');
+}
+
+// Espelha buildMarkerChipItems (usada na UI interativa), mas devolve título/detalhe/nota
+// como texto puro em vez de HTML de chip — o layout de impressão (.rprint-marker-item)
+// é fixo e não precisa do <details> retrátil da tela.
+function reportMarkerItems(c){
+  const items = [];
+  const push = (group, count, title, detailLines, note) => items.push({ group, count, title, detail: (detailLines||[]).join('\n'), note: note || '' });
+  if (c.isLuminarySwap){
+    push(4, 0, '☉☾ Câmbio de luminares', [c.luminarySwapDetail || ''], 'O Sol de cada um cai no signo da Lua do outro — indício clássico de reconhecimento emocional profundo entre os dois.');
+  }
+  if ((c.saturnCommitmentContacts||0) > 0) push(1, c.saturnCommitmentContacts, `♄ Saturno · compromisso (${c.saturnCommitmentContacts})`, c.saturnCommitmentDetails, 'Também conta para a categoria Prático.');
+  if ((c.nodeDestinyContacts||0) > 0) push(2, c.nodeDestinyContacts, `☊ Nodo · eixo do destino (${c.nodeDestinyContacts})`, c.nodeDestinyDetails, 'Também conta para a categoria Prático.');
+  if ((c.nodeAxisContacts||0) > 0) push(2, c.nodeAxisContacts, `☊☊ Nodo/Vértice · eixo Destino mútuo (${c.nodeAxisContacts})`, c.nodeAxisDetails, 'Também conta para a categoria Prático.');
+  if ((c.vertexFatedContacts||0) > 0) push(2, c.vertexFatedContacts, `✧ Vértice · encontro (${c.vertexFatedContacts})`, c.vertexFatedDetails, 'Também conta para a categoria Prático.');
+  if ((c.chironWoundContacts||0) > 0) push(1, c.chironWoundContacts, `⚷ Quíron (${c.chironWoundContacts})`, c.chironWoundDetails, 'Contatos Quíron-Lua também contam para a categoria Emocional.');
+  if ((c.lilithMagneticContacts||0) > 0) push(3, c.lilithMagneticContacts, `⚸ Lilith (${c.lilithMagneticContacts})`, c.lilithMagneticDetails, '');
+  if ((c.sunTranspersonalContacts||0) > 0) push(3, c.sunTranspersonalContacts, `☉⚡ Sol transpessoal (${c.sunTranspersonalContacts})`, c.sunTranspersonalDetails, '');
+  if ((c.fortuneContacts||0) > 0) push(3, c.fortuneContacts, `🍀 Fortuna (${c.fortuneContacts})`, c.fortuneDetails, '');
+  if ((c.sunMoonContacts||0) > 0) push(1, c.sunMoonContacts, `☉☾ Sol-Lua · eixo de reconhecimento (${c.sunMoonContacts})`, c.sunMoonDetails, 'Também conta para a categoria Emocional.');
+  if ((c.houseConvergenceContacts||0) > 0) push(4, c.houseConvergenceContacts, `⌂ Casas · convergência (${c.houseConvergenceContacts})`, c.houseConvergenceDetails, '');
+  if ((c.commitmentHouseContacts||0) > 0) push(1, c.commitmentHouseContacts, `🏠 Casas · estrutura de parceria (${c.commitmentHouseContacts})`, c.commitmentHouseDetails, '');
+  if ((c.destinyHouseContacts||0) > 0) push(2, c.destinyHouseContacts, `☊ Casas · eixo Destino (${c.destinyHouseContacts})`, c.destinyHouseDetails, '');
+  if ((c.friendshipHouseContacts||0) > 0) push(3, c.friendshipHouseContacts, `🧑‍🤝‍🧑 Casas · círculo social (${c.friendshipHouseContacts})`, c.friendshipHouseDetails, '');
+  if ((c.chironPartnershipHouseContacts||0) > 0) push(3, c.chironPartnershipHouseContacts, `⚷ Quíron · ferida na parceria (7ª) (${c.chironPartnershipHouseContacts})`, c.chironPartnershipHouseDetails, '');
+  if ((c.plutoPartnershipHouseContacts||0) > 0) push(3, c.plutoPartnershipHouseContacts, `♇ Plutão · intensidade na parceria (7ª) (${c.plutoPartnershipHouseContacts})`, c.plutoPartnershipHouseDetails, '');
+  return items;
+}
+
+function buildReportMarkersHTML(c){
+  const items = reportMarkerItems(c);
+  const vinculo = c.vinculoProfile
+    ? `<div class="rprint-marker-item"><div class="mtitle">💍 Perfil de vínculo · ${escapeHtml(c.vinculoProfile.label)}</div><div class="mdetail">${escapeHtml(c.vinculoProfile.description || '')}${(c.vinculoProfile.signals && c.vinculoProfile.signals.length) ? '\n\n' + escapeHtml(c.vinculoProfile.signals.join('\n')) : ''}</div></div>`
+    : '';
+  if (!vinculo && items.length === 0) return '<p class="rprint-empty-note">Nenhum marcador narrativo identificado nesta sinastria.</p>';
+  let html = vinculo;
+  for (const groupId of [1,2,3,4]){
+    const groupItems = items.filter(i => i.group === groupId);
+    if (!groupItems.length) continue;
+    groupItems.sort((a,b) => b.count - a.count);
+    const meta = GROUP_META[groupId];
+    html += `<div class="rprint-marker-group"><div class="rprint-marker-group-title">${meta.icon} ${meta.label}</div>` +
+      groupItems.map(i => `<div class="rprint-marker-item"><div class="mtitle">${escapeHtml(i.title)}</div>${i.detail ? `<div class="mdetail">${escapeHtml(i.detail)}</div>` : ''}${i.note ? `<div class="mnote">${escapeHtml(i.note)}</div>` : ''}</div>`).join('') +
+      `</div>`;
+  }
+  return html;
+}
+
+function buildReportDictHTML(c){
+  if (!c.raw) return '<p class="rprint-empty-note">Esta sinastria não tem o texto original salvo, então não dá pra recalcular os padrões dela aqui.</p>';
+  const relType = c.relType || 'romantico';
+  const parsed = parseText(c.raw);
+  const patterns = buildDictionaryPatterns(parsed);
+  const withEntries = patterns
+    .map(p => ({ p, entry: findBestDictEntry(p.signature, relType, c.id) }))
+    .filter(x => x.entry && getDictEntryText(x.entry, relType).trim());
+  if (withEntries.length === 0) return '<p class="rprint-empty-note">Nenhum significado cadastrado no dicionário para os padrões desta sinastria.</p>';
+  return withEntries.map(({ p, entry }) => `<div class="rprint-dict-item"><div class="dtitle">${escapeHtml(p.label)}</div><div class="dtext">${escapeHtml(getDictEntryText(entry, relType))}</div></div>`).join('');
+}
+
+function buildReportRelationHTML(c, opts){
+  const relType = c.relType || 'romantico';
+  let html = `<div class="rprint-relation">
+    <div class="rprint-relation-title">${escapeHtml(c.n1)} &amp; ${escapeHtml(c.n2)}</div>
+    <div class="rprint-relation-meta">${escapeHtml(REL_TYPE_LABEL_PT[relType] || relType)} · ${c.aspectsCount||0} aspectos · ${c.housesCount||0} sobreposições de casa</div>`;
+  if (opts.resumo) html += `<div class="rprint-block"><h3>Perfil e veredito</h3>${buildReportVerdictHTML(c)}</div>`;
+  if (opts.numeros) html += `<div class="rprint-block"><h3>Números principais</h3>${buildReportStatsHTML(c)}</div>`;
+  if (opts.categorias) html += `<div class="rprint-block"><h3>Categorias</h3>${buildReportCategoryHTML(c.categoryScores, relType)}</div>`;
+  if (opts.marcadores) html += `<div class="rprint-block"><h3>Marcadores narrativos</h3>${buildReportMarkersHTML(c)}</div>`;
+  if (opts.significados) html += `<div class="rprint-block"><h3>Significados cadastrados</h3>${buildReportDictHTML(c)}</div>`;
+  html += `</div>`;
+  return html;
+}
+
+function buildReportComparativeHTML(list){
+  const rows = list.map(c => ({
+    c,
+    compat: c.compatibilityScore, potential: c.potentialScore, harmony: c.harmonyPct,
+    structure: c.structureHarmonyPct, destiny: c.destinyHarmonyPct, strength: c.strength,
+  }));
+  const maxOf = (key) => {
+    const vals = rows.map(r => r[key]).filter(v => v != null);
+    return vals.length ? Math.max(...vals) : null;
+  };
+  const maxCompat = maxOf('compat'), maxPotential = maxOf('potential'), maxHarmony = maxOf('harmony'),
+        maxStructure = maxOf('structure'), maxDestiny = maxOf('destiny'), maxStrength = maxOf('strength');
+  const cell = (v, max, suffix) => v != null ? `<td class="${max != null && v === max ? 'hl' : ''}">${v}${suffix||''}</td>` : '<td>—</td>';
+  const headRow = `<tr><th>Relação</th><th>Vínculo</th><th>Compat.</th><th>Veredito</th><th>Harmonia</th><th>Estrutura</th><th>Destino</th><th>Nitidez</th></tr>`;
+  const bodyRows = rows.map(r => `<tr>
+    <td>${escapeHtml(r.c.n1)} &amp; ${escapeHtml(r.c.n2)}</td>
+    <td>${r.c.vinculoProfile ? escapeHtml(r.c.vinculoProfile.label) : escapeHtml(r.c.verdictTitle || '—')}</td>
+    ${cell(r.compat, maxCompat, '%')}
+    ${cell(r.potential, maxPotential, '')}
+    ${cell(r.harmony, maxHarmony, '%')}
+    ${cell(r.structure, maxStructure, '%')}
+    ${cell(r.destiny, maxDestiny, '%')}
+    ${cell(r.strength, maxStrength, '')}
+  </tr>`).join('');
+  return `<div class="rprint-compare"><h2>Comparativo entre as sinastrias selecionadas</h2><table class="rprint-compare-table"><thead>${headRow}</thead><tbody>${bodyRows}</tbody></table></div>`;
+}
+
+document.getElementById('generateReportBtn').addEventListener('click', () => {
+  const errEl = document.getElementById('reportError');
+  errEl.style.display = 'none';
+  errEl.textContent = '';
+
+  const selected = getSelectedReportSynastries();
+  if (selected.length === 0){
+    errEl.textContent = 'Selecione ao menos uma sinastria pra gerar o relatório.';
+    errEl.style.display = 'block';
+    return;
+  }
+
+  const opts = getReportOptions();
+  const showComparative = opts.comparativo && selected.length >= 2;
+  const hasAnyContent = opts.resumo || opts.numeros || opts.categorias || opts.marcadores || opts.significados || showComparative;
+  if (!hasAnyContent){
+    errEl.textContent = 'Marque ao menos um item em "O que incluir no relatório".';
+    errEl.style.display = 'block';
+    return;
+  }
+
+  let html = `<div class="rprint">
+    <div class="rprint-cover">
+      <h1>${selected.length === 1 ? 'Relatório de sinastria' : 'Relatório de sinastrias'}</h1>
+      <div class="sub">${selected.length} relaç${selected.length === 1 ? 'ão' : 'ões'} · gerado em ${new Date().toLocaleDateString('pt-BR')}</div>
+    </div>`;
+  if (showComparative) html += buildReportComparativeHTML(selected);
+  html += selected.map(c => buildReportRelationHTML(c, opts)).join('');
+  html += `</div>`;
+
+  const area = document.getElementById('reportPrintArea');
+  area.innerHTML = html;
+  // <details> (usados noutras partes da tela) nascem fechados por padrão — aqui não
+  // usamos nenhum, mas por segurança, se algum dia entrar um, força aberto pra não
+  // sumir conteúdo na impressão.
+  area.querySelectorAll('details').forEach(d => d.open = true);
+
+  // pequeno atraso pra garantir que o browser terminou de aplicar o innerHTML antes
+  // de abrir o diálogo de impressão.
+  setTimeout(() => window.print(), 50);
 });
 </script>
 </body>
