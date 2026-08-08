@@ -316,6 +316,8 @@
   select#dictFilterSelect{ min-width: 200px; }
   .dict-select-row{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:14px; }
   .dict-select-row label{ font-family:'JetBrains Mono', monospace; font-size:11.5px; color: var(--muted); }
+  .dict-select-row label.chk{ display:flex; align-items:center; gap:6px; cursor:pointer; font-size:12.5px; color:var(--muted); white-space:nowrap; }
+  .dict-select-row input[type="checkbox"]{ accent-color:var(--gold); width:15px; height:15px; cursor:pointer; }
 
   .ghost-btn{
     background: transparent; color: var(--muted); border:1px solid var(--line);
@@ -775,16 +777,21 @@
         <button type="button" class="ghost-btn" id="exportDictBtn">Exportar JSON</button>
         <button type="button" class="ghost-btn" id="importDictBtn">Importar JSON</button>
         <input type="file" id="importDictInput" accept=".json,application/json" style="display:none;">
+        <button type="button" class="ghost-btn" id="clearAllDictBtn">Limpar tudo</button>
       </div>
     </div>
     <p class="hint">Cadastre o significado de cada aspecto e posição de casa encontrados numa sinastria — ordenados do mais pro menos importante (mesmo peso real usado no resto da calculadora: orbe + tier do par). Cada significado pode ser <strong>único desta sinastria</strong> ou <strong>reutilizável</strong> (aplicado automaticamente sempre que o mesmo padrão aparecer, em qualquer sinastria, pra todos os vínculos ou só pra um tipo). Clique numa linha pra abrir e editar.</p>
     <div class="dict-select-row">
       <label for="dictSynastrySelect">Ver padrões de:</label>
       <select id="dictSynastrySelect"></select>
+      <button type="button" class="ghost-btn" id="clearSynastryDictBtn" title="Remove só os significados marcados como 'Só nesta sinastria'. Os reutilizáveis (para todos os vínculos ou para a categoria dela) continuam valendo.">Limpar esta sinastria</button>
     </div>
     <div class="dict-select-row" style="margin-bottom:20px;">
       <label for="dictFilterSelect">Filtrar:</label>
       <select id="dictFilterSelect"></select>
+      <label class="chk" title="Padrões cujo orbe passou do teto específico do tipo de astro (Quíron/Lilith/Nodo/Vértice/Fortuna/transpessoais) — considerados irrelevantes, peso zerado.">
+        <input type="checkbox" id="dictShowZeroed" onchange="renderDictionaryForCurrentSelection()"> Mostrar zerados
+      </label>
     </div>
 
     <div class="dict-prompt-cfg open" id="dictPromptCfg">
@@ -1019,21 +1026,37 @@ const CALIBRATION = {
   //
   // houseMarkerWeightAngular/houseMarkerWeightCadent foram adicionados numa tentativa
   // de graduar esse peso por angularidade da casa (1/4/7/10 mais "potente", 3/6/9/12
-  // mais "difusa" — ver ANGULAR_HOUSES/CADENT_HOUSES/houseMarkerWeightFor) — mas
-  // revertidos como aplicação a HOUSE_CATEGORY_MARKERS especificamente: essas entradas
-  // já são pares curados por AFINIDADE TEMÁTICA (Mercúrio-3ª/9ª pela regência mental,
-  // Júpiter-9ª por regência tradicional, Lua-12ª por fusão inconsciente) — um eixo
-  // tradicional diferente de "quanto qualquer planeta se expressa na casa". Descontar
-  // por cadência em cima de um par já selecionado por relevância temática penaliza
-  // justamente o marcador certo pelo motivo errado; e como nenhum par curado cai numa
-  // casa sucedente, o efeito colateral era enfraquecer só Intelectual/parte de
-  // Emocional sem tocar Prático/Sexual — viés entre categorias sem base astrológica,
-  // só coincidência de numeração de casa. Os dois valores continuam aqui, disponíveis
-  // pra um eventual marcador genérico (planeta pessoal em qualquer casa, sem curadoria
-  // temática prévia) — não existe um hoje.
+  // mais "difusa" — ver ANGULAR_HOUSES/CADENT_HOUSES/houseMarkerWeightFor) — antes
+  // revertidos como aplicação a HOUSE_CATEGORY_MARKERS especificamente, mas essa
+  // reversão foi corrigida (decisão pós-discussão, ver houseAngularityMult abaixo):
+  // angularidade é um critério tradicional real e independente da curadoria temática —
+  // "Vênus na 4ª" merece pesar mais que "Vênus na 8ª" só por a 4ª ser angular, MESMO
+  // os dois já sendo pares curados por regência/tema. Os dois eixos (tema + angularidade)
+  // não competem, se somam: tema decide SE o par entra e em qual categoria; angularidade
+  // gradua QUANTO ele pesa uma vez dentro. Ver houseAngularityMult, aplicado agora em
+  // houseValenceWeight/houseW dos pares curados.
   houseMarkerWeightAngular: 0.65,
   houseMarkerWeight: 0.5,
   houseMarkerWeightCadent: 0.35,
+
+  // NOVO — multiplicador de angularidade aplicado a QUALQUER peso de casa curada
+  // (presença E valência, ver houseAngularityMult/HOUSE_PLANET_VALENCE abaixo). Mesma
+  // proporção de houseMarkerWeightAngular/Cadent acima (0.65/0.5/0.35 → razão
+  // 1.3/1.0/0.7), só normalizada em torno de 1.0 pra funcionar como multiplicador em
+  // vez de peso absoluto.
+  houseAngularityMult: { angular: 1.3, succedent: 1.0, cadent: 0.7 },
+
+  // NOVO — peso-base da valência (harmônico/tenso) de planeta-em-casa, pros planetas
+  // com leitura tradicional de viés (ver HOUSE_PLANET_VALENCE) — decisão pós-discussão
+  // com o usuário: casa não tem orbe pra graduar exatidão, mas ALGUNS planetas têm uma
+  // leitura de "confortável" ou "pesado" já na origem, mesmo sem aspecto (Vênus/Júpiter
+  // numa casa tende a ser lido como benéfico; Saturno/Marte tendem a vir com peso ou
+  // fricção; Plutão/Netuno/Quíron/Lilith são genuinamente ambivalentes por natureza —
+  // ver comentário em HOUSE_PLANET_VALENCE). Isso é MAIS FRACO que a leitura de um aspecto (que
+  // tem geometria + orbe pra sustentar), mas não é ZERO leitura, como o sistema tratava
+  // antes (todo planeta em casa, neutro). Valor propositalmente modesto — abaixo do
+  // peso típico de um aspecto de orbe moderado — pra empurrar sem dominar sozinho.
+  houseValenceWeight: 0.28,
 
   // Empurrão harmônico direto no eixo Estrutura por Sol/Lua nas casas 1ª/4ª/7ª/10ª
   // (MARRIAGE_HOUSES) — decisão tomada explicitamente após discussão: diferente do
@@ -1049,6 +1072,14 @@ const CALIBRATION = {
   // peso real sem dominar sozinho o eixo inteiro. Cada overlap conta uma vez — pares
   // recíprocos (Sol dos dois lados na 7ª um do outro) somam em dobro naturalmente, já
   // que cada direção já é contada como um contato próprio em commitmentHouseContacts.
+  //
+  // Decisão pós-discussão (caso real testado: Sol de A na 7ª de B E Sol de B na 7ª de
+  // A, mutuamente) — esse mesmo empurrão agora TAMBÉM soma dentro do catPool da
+  // categoria correspondente (Prático/Emocional, via categoryPoolForHouse), não só no
+  // eixo Estrutura isolado. Antes, Sol-7ª empurrava structureHarmonyPct mas a barra de
+  // Prático via aquele mesmo Sol-7ª como neutro (só presence) — inconsistente: a
+  // leitura tradicional de "Sol do parceiro na sua 7ª" não muda de favorável pra neutra
+  // dependendo de qual painel está olhando. Ver bloco correspondente no loop de casas.
   commitmentHouseStructureWeight: 0.6,
 
   // Mesmo raciocínio de commitmentHouseStructureWeight acima, aplicado ao eixo Destino:
@@ -1415,6 +1446,15 @@ const HOUSE_CATEGORY_MARKERS = new Map([
   // (isso é Lua/Vênus/Sol), é peso/responsabilidade estrutural na base doméstica —
   // mesmo território prático que Saturno tem em qualquer outro ângulo.
   ['Saturn-1', 'pratico'], ['Saturn-4', 'pratico'], ['Saturn-7', 'pratico'], ['Saturn-10', 'pratico'],
+  // Urano-1/Urano-7: pesquisa em fontes de sinastria (Authority Astrology, Astrologify,
+  // DXP Net, 12andUs, Illume, entre outras) — "conexão elétrica e não-convencional"/
+  // "atração instantânea" na 1ª e "excitação, imprevisibilidade e um senso de
+  // libertação" (junto com "desafios de comprometimento") na 7ª, sempre em par com a
+  // mesma dualidade que já rendeu 0.50 em HOUSE_PLANET_VALENCE. Entram em 'pratico'
+  // por fecharem o mesmo grupo de Sol-1/Lua-1 e Vênus-7/Marte-7/Sol-7/Lua-7/Saturno-7
+  // — "como o vínculo já nasce" (1ª) e a casa da parceria formal por excelência (7ª),
+  // mesmo território estrutural que os outros planetas já ocupam nessas duas casas.
+  ['Uranus-1', 'pratico'], ['Uranus-7', 'pratico'],
   // 11ª é a casa de amigos/grupo/esperanças compartilhadas por excelência — Júpiter
   // (sorte, generosidade, expansão) caindo ali é o marcador clássico de "essa pessoa
   // traz oportunidade/crescimento pro círculo social do outro", tradicionalmente citado
@@ -1427,6 +1467,13 @@ const HOUSE_CATEGORY_MARKERS = new Map([
   // Júpiter tocando qualquer pessoal como 'afinidade' sistematicamente, e Jupiter-11
   // segue a mesma regra por consistência.
   ['Jupiter-11', 'afinidade'],
+  // Urano-11: mesma pesquisa citada acima em Urano-1/Urano-7 — caso mais forte de
+  // regência natural entre as quatro casas mapeadas (Urano rege Aquário, signo natural
+  // da 11ª), fontes descrevem como "mais natural" que as outras posições — amizade,
+  // causas em comum, "libertação... mas pode parecer detached/impessoal". Entra em
+  // 'afinidade', fechando o par com Júpiter-11 logo acima (regência só define
+  // categoria/tema aqui, não valência — ver comentário em HOUSE_PLANET_VALENCE).
+  ['Uranus-11', 'afinidade'],
   // Vênus-11 (afeto genuíno de grupo) e Lua-11 (pertencimento emocional) entram só
   // aqui, na camada solta — coeso com o padrão do resto do arquivo, que já aceita
   // múltiplos planetas somando a mesma área (ex.: Lua-4ª e Vênus-4ª, ambos em
@@ -1443,6 +1490,11 @@ const HOUSE_CATEGORY_MARKERS = new Map([
   // Júpiter: mesma família de Jupiter-11 (calor/expansão) — 7ª (sorte/expansão na
   // própria parceria) e 1ª (Júpiter eleva a identidade combinada desde o início).
   ['Jupiter-7', 'afinidade'], ['Jupiter-1', 'afinidade'],
+  // Urano-5: fontes descrevem "química elétrica"/"sinergia criativa" no romance, mas o
+  // tom predominante é "diversão/experimentação" mais que desejo denso — decisão
+  // pós-discussão de colocar em 'afinidade' em vez de 'sexual' (onde Vênus-5/Marte-5
+  // já estão), por não carregar o mesmo peso erótico que justifica aquele par.
+  ['Uranus-5', 'afinidade'],
   // Lilith: pareia com os marcadores sexuais já existentes na 5ª/8ª (Venus-5/Mars-5,
   // Venus-8/Mars-8) — magnetismo/sombra (8ª) e desejo tabu no romance (5ª).
   ['Lilith-8', 'sexual'], ['Lilith-5', 'sexual'],
@@ -1527,6 +1579,7 @@ const PLANET_LABEL_PT = {
   Sun:'Sol', Moon:'Lua', Mercury:'Mercúrio', Venus:'Vênus', Mars:'Marte', Jupiter:'Júpiter', Saturn:'Saturno',
   Uranus:'Urano', Neptune:'Netuno', Pluto:'Plutão', Chiron:'Quíron', Lilith:'Lilith',
   Node:'Nodo Norte', SouthNode:'Nodo Sul', Vertex:'Vértice', Ascendant:'Ascendente', MC:'Meio-do-Céu', DSC:'Descendente',
+  IC:'Fundo do Céu',
   Fortune:'Parte da Fortuna',
 };
 const ASPECT_LABEL_PT = {
@@ -1538,6 +1591,14 @@ const SIGN_LABEL_PT = {
   Aries:'Áries', Taurus:'Touro', Gemini:'Gêmeos', Cancer:'Câncer', Leo:'Leão', Virgo:'Virgem',
   Libra:'Libra', Scorpio:'Escorpião', Sagittarius:'Sagitário', Capricorn:'Capricórnio',
   Aquarius:'Aquário', Pisces:'Peixes',
+};
+// Signo oposto na roda do zodíaco (6 casas de distância) — usado por axisMirrorNote
+// pra mostrar o signo do outro lado do eixo Ascendente/Descendente ou MC/IC, já que os
+// dois pontos de um mesmo eixo estão sempre em signos opostos.
+const OPPOSITE_SIGN = {
+  Aries:'Libra', Libra:'Aries', Taurus:'Scorpio', Scorpio:'Taurus',
+  Gemini:'Sagittarius', Sagittarius:'Gemini', Cancer:'Capricorn', Capricorn:'Cancer',
+  Leo:'Aquarius', Aquarius:'Leo', Virgo:'Pisces', Pisces:'Virgo',
 };
 // isHarmonic (opcional): quando informado, prefixa a linha com 🟢/🔴 pra distinguir,
 // dentro do mesmo marcador (ex: "2 contatos de Saturno"), quais contatos fluem fácil
@@ -1888,6 +1949,86 @@ function houseMarkerWeightFor(house){
   return CALIBRATION.houseMarkerWeight;
 }
 
+// Multiplicador de angularidade aplicado aos pares curados de HOUSE_CATEGORY_MARKERS
+// (peso de presence E, agora, de valência — ver HOUSE_PLANET_VALENCE abaixo) — ver
+// CALIBRATION.houseAngularityMult pro raciocínio completo de por que isso não compete
+// com a curadoria temática, só a gradua.
+function houseAngularityMult(house){
+  if (ANGULAR_HOUSES.has(house)) return CALIBRATION.houseAngularityMult.angular;
+  if (CADENT_HOUSES.has(house)) return CALIBRATION.houseAngularityMult.cadent;
+  return CALIBRATION.houseAngularityMult.succedent;
+}
+
+// Viés harmônico/tenso de planeta-em-casa, pros planetas com leitura tradicional de
+// caráter já na origem (sem precisar de aspecto) — decisão pós-discussão com o usuário
+// (caso real: Sol de A na 7ª de B e vice-versa). Valor = fração que vai pro lado
+// HARMÔNICO (o resto vai pro tenso) — mesmo formato de harmonicFraction, mas fixo por
+// planeta em vez de calculado por aspecto+signo, já que casa não tem geometria pra
+// variar. Só planetas com leitura tradicional clara e consensual entram aqui:
+//   - Vênus/Júpiter: benéficos clássicos — presença tende a ser lida como confortável/
+//     favorável mesmo sem aspecto (0.80: majoritariamente harmônico, não binário).
+//   - Saturno/Marte/Plutão/Quíron: tendem a trazer peso, fricção ou ferida por
+//     natureza — presença lida como majoritariamente tensa (0.20: não é "sempre ruim",
+//     mas o viés por defeito pesa pro lado difícil).
+// Deliberadamente NÃO inclui Sol/Lua/Mercúrio (mais neutros/contextuais — dependem
+// muito de signo/regência pra ter viés confiável) nem Nodos/Vértice/Fortuna (pontos
+// mais discutidos/ambivalentes, sem consenso tradicional forte o bastante pra um
+// viés fixo, nem sequer o 0.50 ambivalente que a família transpessoal recebeu) —
+// esses continuam neutros (só presence), como antes. Urano/Netuno/Plutão/Quíron/
+// Lilith JÁ estão cobertos abaixo, todos em 0.50 (ambivalente-por-natureza, não
+// "sem viés"). Não generalizar sem novo caso real discutido, mesmo espírito do
+// resto do arquivo.
+const HOUSE_PLANET_VALENCE = new Map([
+  ['Venus', 0.80],
+  ['Jupiter', 0.80],
+  ['Saturn', 0.20],
+  ['Mars', 0.20],
+  // Quíron: alinhado com o tratamento que ele JÁ tem nos aspectos (AMBIVALENT_
+  // CONJUNCTION_POINTS, frac 0.5) — "ferida E cura no mesmo símbolo", mesma dualidade
+  // em qualquer casa que ele caia (7ª/8ª, ver HOUSE_CATEGORY_MARKERS), não só em
+  // conjunção. Antes ficava agrupado com Saturno/Marte em 0.20 (tenso), inconsistente
+  // com a própria leitura que o sistema já dava a ele — corrigido pós-discussão
+  // (mesmo raciocínio que levou a Lilith pra 0.5 antes dele).
+  ['Chiron', 0.50],
+  // Plutão/Netuno: mesma família TRANSPERSONAL_PLANETS dos aspectos, onde os três
+  // (Urano/Netuno/Plutão) já recebem frac 0.5 ambivalente em conjunção ("intensos e
+  // desestabilizadores por natureza... nem fácil, nem só tensa"). Plutão estava
+  // isolado em 0.20 (tenso, junto de Saturno/Marte) — corrigido pra bater com o
+  // resto da família transpessoal. Netuno entra pela primeira vez aqui (antes nem
+  // tinha entrada, ficava neutro) — mesma leitura ambivalente, cobre Netuno-7/
+  // Netuno-1 (ver HOUSE_CATEGORY_MARKERS). Urano fica de fora por ora: ele ainda não
+  // tem NENHUM par casa-específico curado em HOUSE_CATEGORY_MARKERS (diferente de
+  // Netuno/Plutão), então uma entrada aqui não teria efeito nenhum até esse par
+  // existir — decisão pendente, não esquecimento.
+  ['Pluto', 0.50],
+  ['Neptune', 0.50],
+  // Urano: fecha a família transpessoal (Netuno/Plutão acima) em 0.50 — decisão
+  // pós-discussão (caso 1ª/5ª/7ª/11ª). Mesma leitura ambivalente-por-natureza da
+  // dupla acima ("excitação/libertação" de um lado, "instabilidade/imprevisibilidade"
+  // do outro, em qualquer uma das quatro casas onde ele agora tem par curado em
+  // HOUSE_CATEGORY_MARKERS logo abaixo). Considerado e descartado um viés levemente
+  // positivo específico pra 11ª (por "regência natural" — Urano rege Aquário, signo
+  // natural da 11ª): regência no arquivo já tem um uso definido e é só pra categoria/
+  // tema (ver Jupiter-9/Jupiter-11 logo abaixo), nunca pra valência — e o próprio
+  // "mais natural" nas fontes pesquisadas vem emparelhado com "pode parecer detached/
+  // impessoal", tensão real, não um adorno. Mantido 0.50 parelho nas quatro casas até
+  // aparecer um caso real que force diferenciação (mesmo padrão que levou Quíron/
+  // Plutão a mudar de valência só depois de caso testado, não por antecipação teórica).
+  ['Uranus', 0.50],
+  // Lilith entra em 0.5 (decisão pós-discussão) — não pra fingir que ela é "boa" numa
+  // casa, mas pra parar de tratá-la como se não tivesse opinião nenhuma. Nos ASPECTOS
+  // ela já cai em AMBIVALENT_CONJUNCTION_POINTS com frac 0.5 fixo, pela própria leitura
+  // que a tradição de sinastria dá a ela: "desejo/sombra que magnetiza e desconforta ao
+  // mesmo tempo" — mesma dualidade em qualquer casa que ela caia (5ª/prazer, 8ª/intimidade
+  // etc.), não só em conjunção. 0.5 cai bem na faixa "genuinamente ambivalente" (ver
+  // markerCategory, 0.41–0.59), então puxa harmoniousW/tenseW igualmente E aparece com
+  // marcador 🟡 dedicado no hover (ver bloco de casas abaixo) — não fica mais neutra/muda,
+  // mas também não vira "favorável" fingido. Mercúrio, por comparação, FICA de fora: nos
+  // aspectos dele não existe nem viés harmônico nem ambivalente fixo (a leitura vem 100%
+  // da geometria/do outro planeta) — não tem precedente equivalente pra copiar pra casa.
+  ['Lilith', 0.50],
+]);
+
 // Eixos com peso extra por serem os indicadores clássicos mais citados em sinastria.
 // Usamos pesos escalonados por "tier" em vez de um boost único: tier 1 são os eixos
 // mais centrais da literatura de sinastria; os demais são reais, mas um degrau abaixo
@@ -2029,18 +2170,16 @@ const AXIS_BOOST = new Map([
   // Mesmo tier 1.30, sem base na literatura pra diferenciar pra cima ou pra baixo.
   ['Node-SouthNode', 1.30],
 
-  // Nodo/Vértice tocando um dos quatro ângulos: mesmo tier 1.30 do resto da família
-  // (auditoria: Vértice-Ascendente/MC já estavam aqui, mas Nodo-Ascendente/MC não tinham
-  // entrada nenhuma — caíam no peso genérico 1.0 apesar do comentário do código tratar
-  // Nodo e Vértice tocando ângulo como igualmente "fatídicos". IC/DSC completam a
-  // cobertura dos quatro ângulos pros dois pontos, junto com a mudança em
+  // Nodo tocando um dos quatro ângulos: mesmo tier 1.30 do resto da família Nodo
+  // (auditoria: Nodo-Ascendente/MC não tinham entrada nenhuma — caíam no peso genérico
+  // 1.0. IC/DSC completam a cobertura dos quatro ângulos, junto com a mudança em
   // anchorHitsPersonal que agora reconhece IC/DSC como ângulo válido pro eixo Destino).
+  // Vértice-ângulo NÃO fica mais nesse tier — ver correção de auditoria #6 logo abaixo,
+  // no bloco onde o resto da família Vértice foi rebaixada.
   ['Ascendant-Node', 1.30],
   ['MC-Node', 1.30],
   ['IC-Node', 1.30],
   ['DSC-Node', 1.30],
-  ['IC-Vertex', 1.30],
-  ['DSC-Vertex', 1.30],
 
   // Mesma lacuna do Nodo Norte, só que do lado Sul: SouthNode já tinha tier 1.30 com
   // Sol/Lua/Vênus/Marte (ver comentário acima), mas nenhuma entrada com os quatro
@@ -2064,68 +2203,96 @@ const AXIS_BOOST = new Map([
   ['IC-Moon', 1.20],
   ['IC-Venus', 1.20],
   ['IC-Mars', 1.20],
-  ['DSC-Sun', 1.20],
-  ['DSC-Moon', 1.20],
-  ['DSC-Venus', 1.20],
-  ['DSC-Mars', 1.20],
+  // DSC-Sol/Lua/Vênus/Marte saíram do valor fixo aqui — ver
+  // DSC_ASC_SYMMETRIC_TIER/DSC_ASC_INTERMEDIATE_TIER e a lógica em axisBoost() logo
+  // abaixo (auditoria de simetria Asc/Desc).
 
-  // Vértice tocando um pessoal ou um dos ângulos: mesmo tier de peso do Nodo (1.30) —
-  // a literatura de sinastria trata "encontro fatídico" (Vértice) como um sinal tão
-  // forte quanto destino/karma (Nodo), já reconhecido em VERTEX_FATED_TARGETS como
-  // marcador narrativo; faltava o boost de peso equivalente na categorização.
-  // Vértice-Vértice mútuo entra no mesmo tier (ver comentário em VERTEX_FATED_TARGETS).
-  ['Moon-Vertex', 1.30],
-  ['Sun-Vertex', 1.30],
-  ['Venus-Vertex', 1.30],
-  ['Mars-Vertex', 1.30],
-  ['Ascendant-Vertex', 1.30],
-  ['MC-Vertex', 1.30],
-  ['Vertex-Vertex', 1.30],
-  // Nodo (Norte ou Sul) tocando Vértice do parceiro: fecha a família de cruzamentos
-  // mútuos dentro de DESTINY_ANCHORS (Node/SouthNode/Vertex). Nodo-Nodo, Nodo Sul-Nodo
-  // Sul e Vértice-Vértice já tinham 1.30 — faltavam só essas duas combinações do trio.
-  // Dois sistemas diferentes de "destino" (trajetória kármica vs. encontro fatídico)
-  // apontando pro mesmo lugar não é sinal mais fraco que o par alinhado.
-  ['Node-Vertex', 1.30],
-  ['SouthNode-Vertex', 1.30],
-  // Mercúrio-Vértice: o eixo Destino (axisPoolFor/DESTINY_ANCHORS) já conta esse
-  // contato via CORE_PERSONAL_PLANETS (que inclui Mercúrio) — faltava só o peso
-  // equivalente aqui. Decisão tomada (não é mais pergunta em aberto): Mercúrio também
-  // foi incluído em VERTEX_FATED_TARGETS, então o marcador narrativo vertexFatedContacts
-  // (chip visível "encontro fatídico") agora reconhece Mercúrio-Vértice igual a
-  // Saturno/Nodo/Quíron/Lilith, que já reaproveitam CORE_PERSONAL_PLANETS — Vértice
-  // deixou de ser a única exceção com lista própria divergente.
-  ['Mercury-Vertex', 1.30],
+  // Correção de auditoria #6 (calibrado com o usuário, revisão Vértice vs. Nodo): até
+  // aqui, TODA a família Vértice (pessoal, ângulo, Vértice-Vértice, Nodo-Vértice)
+  // dividia o mesmo tier 1.30 do Nodo — decisão revertida por não ter o mesmo lastro.
+  // Nodo (eixo lunar) tem uso consolidado na sinastria cármica moderna, com leitura
+  // relativamente estável entre escolas ("direção evolutiva/kármica"). Vértice é um
+  // ponto puramente geométrico (interseção da eclíptica com o vertical principal),
+  // sem consenso de uso — muitos astrólogos sérios nem trabalham com ele, e entre os
+  // que trabalham as leituras variam bastante ("encontro fatídico", "onde cedemos
+  // controle", "eixo de rendição"). Também é MUITO mais sensível a erro de horário de
+  // nascimento que o Nodo (que se move devagar e independe da hora) — um orbe apertado
+  // no Vértice carrega uma incerteza embutida que o mesmo orbe em Nodo/Lua não carrega.
+  // Rebaixado pro mesmo tier de Quíron/Lilith (1.10, ver bloco logo abaixo) — mesmo
+  // raciocínio já usado ali: sinal narrativo real (continua rastreado em
+  // vertexFatedContacts), mas ponto moderno/disputado, não equivalente a um eixo
+  // cármico de leitura consensual como o Nodo.
+  ['Moon-Vertex', 1.10],
+  ['Sun-Vertex', 1.10],
+  ['Venus-Vertex', 1.10],
+  ['Mars-Vertex', 1.10],
+  ['Mercury-Vertex', 1.10],
+  ['Ascendant-Vertex', 1.10],
+  ['MC-Vertex', 1.10],
+  ['IC-Vertex', 1.10],
+  ['DSC-Vertex', 1.10],
+  ['Vertex-Vertex', 1.10],
+  // Nodo (Norte ou Sul) tocando Vértice do parceiro: par misto — um lado carrega o tier
+  // do Nodo (1.30), o outro o tier rebaixado do Vértice (1.10). Mesmo critério já usado
+  // em Chiron-Node/Chiron-SouthNode logo abaixo (ponto-com-ponto, tiers vizinhos
+  // diferentes → média exata dos dois, 1.20), em vez de herdar o tier mais alto dos dois
+  // lados só porque um deles é o Nodo.
+  ['Node-Vertex', 1.20],
+  ['SouthNode-Vertex', 1.20],
 
-  // Quíron (ferida/cura) e Lilith (magnetismo/sombra) tocando um pessoal: mesmo tier
-  // de peso do MC/IC/DSC (1.20) — ambos já são rastreados como marcadores narrativos
-  // fortes (chironWoundContacts, lilithMagneticContacts) mas não tinham boost de peso
-  // correspondente na categorização, deixando "sinal forte" só no rótulo, não no peso.
-  ['Chiron-Sun', 1.20],
-  ['Chiron-Moon', 1.20],
-  ['Chiron-Venus', 1.20],
-  ['Chiron-Mars', 1.20],
+
+  // Quíron (ferida/cura) e Lilith (magnetismo/sombra) tocando um pessoal: revisão —
+  // estavam no MESMO tier de MC/IC/DSC (1.20), decisão de calibração revertida por não
+  // ter base unânime na literatura. MC/IC/DSC são ângulos estruturais (parte da
+  // geometria do mapa, presentes em toda escola tradicional); Quíron é um centauro
+  // (descoberto em 1977, sem uso na astrologia helenística/tradicional) e Lilith é um
+  // ponto com pelo menos três definições concorrentes (média/osculante/asteroide) que
+  // várias escolas nem usam. Tratá-los como equivalentes a um ângulo cardeal é uma
+  // aposta interpretativa moderna, não um consenso — ambos continuam rastreados como
+  // marcadores narrativos fortes (chironWoundContacts, lilithMagneticContacts), só que
+  // um tier abaixo (1.10) dos quatro ângulos, não mais no mesmo nível.
+  ['Chiron-Sun', 1.10],
+  ['Chiron-Moon', 1.10],
+  ['Chiron-Venus', 1.10],
+  ['Chiron-Mars', 1.10],
   // Mercúrio-Quíron (auditoria de coesão): chironWoundContacts já conta via
-  // CORE_PERSONAL_PLANETS, faltava o peso equivalente aqui — mesmo tier 1.20.
-  ['Chiron-Mercury', 1.20],
+  // CORE_PERSONAL_PLANETS, faltava o peso equivalente aqui — mesmo tier do resto da
+  // família de Quíron (1.10, ver comentário acima).
+  ['Chiron-Mercury', 1.10],
+  // Nodo Norte/Sul tocando Quíron (calibrado com o usuário, auditoria de aspectos
+  // menores): até aqui esse par não tinha NENHUMA entrada aqui, caindo no genérico 1.0
+  // mesmo em orbe praticamente exato — apesar de ser um cruzamento clássico de sinastria
+  // kármica (eixo do destino encontrando o eixo da ferida/dom que se ensina ao parceiro).
+  // Não é nem Nodo-pessoal (tier 2, 1.30 — eixo de destino tocando planeta pessoal
+  // diretamente) nem Quíron-pessoal (tier 3, 1.10 — ponto moderno tocando pessoal): é
+  // ponto-com-ponto, nenhum dos dois pessoal. 1.20 é a média exata dos dois tiers
+  // vizinhos (1.30+1.10)/2, e não por coincidência já é o tier 3 padrão usado por
+  // MC/IC/DSC-pessoal e transpessoal-Vênus/Marte/Sol/Lua/Mercúrio — em vez de inventar
+  // um degrau novo de item único, o par cai num degrau que já existe e já tem lastro
+  // interpretativo. Nodo Sul entra junto, mesmo tier do Nodo Norte, pelo mesmo raciocínio
+  // já aplicado no resto da família Nodo Sul (ver comentário em SouthNode-Sun acima:
+  // "não é menos fatídico, só aponta pra outro lugar").
+  ['Chiron-Node', 1.20],
+  ['Chiron-SouthNode', 1.20],
   // Marte/Vênus tocados por transpessoal (auditoria de coesão): estão em ATTRACTION_PAIRS
   // desde a fusão dos pools originais ("mesma família de magnetismo/idealização/faísca
-  // elétrica" — ver comentário do Set), e Lilith-Mars/Lilith-Venus logo abaixo já têm
-  // 1.20 nesse exato território — mas Netuno/Urano/Plutão tocando Marte/Vênus diretamente
-  // ficavam sem entrada, caindo no genérico 1.0. Mesmo tier do resto da família.
+  // elétrica" — ver comentário do Set). Netuno/Urano/Plutão tocando Marte/Vênus
+  // diretamente ficam no tier 3 padrão (1.20, mesmo de MC/IC/DSC) — são planetas
+  // transpessoais "de corpo inteiro", não pontos derivados/discutidos como Quíron/Lilith,
+  // então não entram na revisão acima.
   ['Mars-Neptune', 1.20],
   ['Mars-Uranus', 1.20],
   ['Mars-Pluto', 1.20],
   ['Neptune-Venus', 1.20],
   ['Uranus-Venus', 1.20],
   ['Pluto-Venus', 1.20],
-  ['Lilith-Sun', 1.20],
-  ['Lilith-Moon', 1.20],
-  ['Lilith-Venus', 1.20],
-  ['Lilith-Mars', 1.20],
+  ['Lilith-Sun', 1.10],
+  ['Lilith-Moon', 1.10],
+  ['Lilith-Venus', 1.10],
+  ['Lilith-Mars', 1.10],
   // Mercúrio-Lilith: mesma lacuna — lilithMagneticContacts já conta via
-  // CORE_PERSONAL_PLANETS, faltava o peso equivalente aqui.
-  ['Lilith-Mercury', 1.20],
+  // CORE_PERSONAL_PLANETS, faltava o peso equivalente aqui (tier 1.10, ver acima).
+  ['Lilith-Mercury', 1.10],
 
   // Mercúrio com Vênus/Marte (como cada um verbaliza afeto/desejo): mesmo tier 3 do
   // MC/IC/Quíron/Lilith acima — sinal real, mas um degrau abaixo do eixo central de
@@ -2136,7 +2303,7 @@ const AXIS_BOOST = new Map([
   ['Mercury-Venus', 1.20],
   ['MC-Mercury', 1.20],
   ['IC-Mercury', 1.20],
-  ['DSC-Mercury', 1.20],
+  // DSC-Mercúrio: mesmo caso do DSC-Sol/Lua/Vênus/Marte acima — ver axisBoost().
   // Mercúrio tocado por transpessoal (auditoria de coesão): Mercury-Uranus, Mercury-
   // Neptune e Mercury-Pluto estão em INTELECTUAL_PAIRS com comentário próprio ("mente
   // esticada por um transpessoal") — mesmo território de intensificação mental que
@@ -2158,6 +2325,15 @@ const AXIS_BOOST = new Map([
   // no genérico 1.0, sem razão pra ser tratado diferente do resto da família de Júpiter.
   ['Jupiter-Mercury', 1.20],
   ['Jupiter-Jupiter', 1.20],
+  // Júpiter tocando um dos quatro ângulos (auditoria de coesão, fechando a lacuna
+  // apontada pelo usuário): Ascendant-Jupiter já tinha 1.20, mas MC/IC/DSC-Jupiter não
+  // tinham entrada nenhuma, caindo no genérico 1.0 — mesmo padrão de lacuna que
+  // Saturno/Nodo/Vértice já tiveram corrigido antes (ver comentário em
+  // Ascendant-Saturn/MC-Saturn/IC-Saturn/DSC-Saturn acima). DSC-Jupiter em
+  // conjunção/oposição/quadratura já herda o 1.20 via axisBoost() (simetria Asc/Desc);
+  // aqui fechamos MC e IC, que não têm esse atalho.
+  ['MC-Jupiter', 1.20],
+  ['IC-Jupiter', 1.20],
   ['Ascendant-Jupiter', 1.20],
 
   // Ascendente-Ascendente e Fortuna tocando pessoal: entraram na categoria Afinidade,
@@ -2170,6 +2346,13 @@ const AXIS_BOOST = new Map([
   // removido na migração pra v2, mas o cuidado com Fortuna continua valendo aqui).
   // Abaixo do peso genérico (1.0) de propósito.
   ['Ascendant-Ascendant', 0.6],
+  // Descendente-Descendente (auditoria de simetria Asc/Desc): mesmo raciocínio do
+  // Ascendente-Ascendente acima — leitura ainda menos unânime na literatura que
+  // Asc-Asc (é sobre "buscamos o mesmo tipo de parceiro", não semelhança direta de
+  // personalidade) — não havia entrada nenhuma aqui, então caía no genérico 1.0,
+  // MAIOR que o 0.6 do Asc-Asc sem nenhuma razão astrológica pra isso. Corrigido pra
+  // igualar o mesmo peso reduzido.
+  ['DSC-DSC', 0.6],
   ['Fortune-Sun', 0.6],
   ['Fortune-Moon', 0.6],
   ['Fortune-Mercury', 0.6],
@@ -2197,9 +2380,56 @@ const AXIS_BOOST = new Map([
   // antes ficava em 1.0 (peso genérico) apesar de já ser tratado como ambivalente na
   // fração harmônica (ver TRANSPERSONAL_PLANETS em harmonicFraction). Agora o peso na
   // conta geral reflete a mesma relevância que o resto do tratamento de Netuno já tem.
+  // MC/IC-Netuno (auditoria de coesão, mesma lacuna do Júpiter acima): fecha a família
+  // dos quatro ângulos — DSC-Netuno já herda o 1.20 via axisBoost() nos aspectos
+  // simétricos, faltava só MC e IC.
+  ['MC-Neptune', 1.20],
+  ['IC-Neptune', 1.20],
   ['Ascendant-Neptune', 1.20],
 ]);
-function axisBoost(planet1, planet2){
+// Auditoria de simetria Asc/Desc: conjunção, oposição e quadratura são geometricamente
+// forçadas a valer o mesmo dos dois lados do eixo Ascendente-Descendente — se o Marte de
+// alguém quadra o Ascendente do parceiro, ele TEM que quadrar o Descendente também, no
+// mesmo grau de orbe (são pontos opostos, 90° de um é 90° do outro). Não faz sentido
+// tratar isso como "a mesma configuração, mas mais fraca vista pelo lado do Descendente"
+// — Ascendente e Descendente são definições complementares da mesma coisa, não uma sendo
+// derivada/menor que a outra. Por isso esses três tipos de aspecto usam o mesmo peso do
+// Ascendente (DSC_ASC_SYMMETRIC_TIER) quando o par é DSC-pessoal.
+//
+// Trígono, sextil, quincúncio etc. já NÃO são forçados: um trígono ao Ascendente vira
+// sextil ao Descendente (ângulos diferentes, pesos tradicionais diferentes), então aí a
+// leitura "ângulo de parceria de longo prazo" (Descendente) genuinamente pode pesar
+// diferente da "reconhecimento instantâneo" (Ascendente) sem contradizer a geometria.
+// Fica num tier intermediário entre o antigo 1.20 (MC/IC) e o 1.35 do Ascendente.
+const DSC_ASC_SYMMETRIC_ASPECTS = new Set(['Conjunction', 'Opposition', 'Square']);
+const DSC_ASC_INTERMEDIATE_TIER = 1.28;
+const DSC_PERSONAL_PLANETS = new Set(['Sun', 'Moon', 'Venus', 'Mars', 'Mercury']);
+
+function axisBoost(planet1, planet2, aspect){
+  // Conjunção/oposição/quadratura ao Descendente são geometricamente IDÊNTICAS ao
+  // mesmo aspecto formado com o Ascendente (mesmo eixo, 180° opostos — 90°/180°/0° de
+  // um ponto é sempre o mesmo ângulo do seu oposto). Isso vale pra QUALQUER planeta ou
+  // ponto, não só os pessoais — por isso, nesses três aspectos, tratamos DSC como
+  // Ascendente pra fins de consulta no AXIS_BOOST, herdando o peso que o Ascendente já
+  // tiver com aquele planeta (1.35, 1.20, ou o genérico 1.0, o que for).
+  if (DSC_ASC_SYMMETRIC_ASPECTS.has(aspect)){
+    const p1 = planet1 === 'DSC' ? 'Ascendant' : planet1;
+    const p2 = planet2 === 'DSC' ? 'Ascendant' : planet2;
+    const pair = [p1, p2].sort().join('-');
+    return AXIS_BOOST.get(pair) || 1.0;
+  }
+
+  // Fora desses três aspectos, a simetria geométrica não existe de verdade (um trígono
+  // ao Ascendente vira sextil ao Descendente — ângulos diferentes) — aí sim a leitura
+  // "papel de parceria de longo prazo" (Descendente) pode legitimamente pesar diferente
+  // da "reconhecimento instantâneo" (Ascendente). DSC-pessoal usa o tier intermediário;
+  // qualquer outro par de DSC usa o que já estiver no mapa (ex.: DSC-Saturn/DSC-Node/
+  // DSC-Vertex, já deliberadamente iguais ao Ascendente em todos os aspectos por
+  // decisão anterior) ou cai no genérico 1.0.
+  const isDscPersonal = (planet1 === 'DSC' && DSC_PERSONAL_PLANETS.has(planet2))
+    || (planet2 === 'DSC' && DSC_PERSONAL_PLANETS.has(planet1));
+  if (isDscPersonal) return DSC_ASC_INTERMEDIATE_TIER;
+
   const pair = [planet1, planet2].sort().join('-');
   return AXIS_BOOST.get(pair) || 1.0;
 }
@@ -2483,6 +2713,110 @@ const ORB_DECAY_DIVISOR = {
   Semisquare: 1.5,
   Sesquiquadrate: 1.5,
 };
+// Teto de orbe por tipo de aspecto (mesmos valores tradicionalmente usados na
+// Efeméride Pessoal — ver ASPECTS lá) — aqui não existia teto nenhum antes: o
+// decaimento exponencial acima (ORB_DECAY_DIVISOR) nunca chega a zero sozinho, só
+// fica pequeno. Este teto define o ponto em que o aspecto deixa de ser considerado.
+const ORB_BASE_MAX = {
+  Conjunction: 8, Opposition: 8, Square: 7, Trine: 7, Sextile: 5,
+  Quincunx: 3, Semisextile: 2, Semisquare: 2, Sesquiquadrate: 2,
+};
+// Multiplicador desse teto por tipo de astro/ponto: luminares, planetas pessoais/
+// sociais e os ângulos (Ascendant/MC/DSC/IC) mantêm o teto cheio (1.0) — é o mesmo
+// critério explicado na análise da sinastria Victor/Dalton. Urano/Netuno/Plutão, por
+// serem mais lentos e geracionais, ficam um degrau mais apertados (0.75). Quíron,
+// Nodo (Node/SouthNode), Vértice e Parte da Fortuna (Fortune) são pontos derivados/
+// discutidos — não planetas no sentido clássico — e pedem orbe bem mais estreito
+// (0.35). Lilith (apogeu lunar médio) é puramente um ponto matemático, sem massa,
+// o mais conservador de todos (0.25). Isso é um teto de EXATIDÃO, separado do
+// desconto de PESO que já existe via AXIS_BOOST/ASPECT_CATEGORY_MULT — os dois
+// mecanismos continuam coexistindo, um não substitui o outro. Quando os dois lados
+// do aspecto têm multiplicadores diferentes, vale o MENOR dos dois (elo mais frágil).
+const ORB_TYPE_MULT = {
+  Uranus: 0.75, Neptune: 0.75, Pluto: 0.75,
+  Chiron: 0.35, Node: 0.35, SouthNode: 0.35, Vertex: 0.35, Fortune: 0.35,
+  Lilith: 0.25,
+};
+function orbTypeMultiplier(name){ return ORB_TYPE_MULT[name] ?? 1.0; }
+function effectiveMaxOrb(aspect, planet1, planet2){
+  const base = ORB_BASE_MAX[aspect] ?? 8;
+  return base * Math.min(orbTypeMultiplier(planet1), orbTypeMultiplier(planet2));
+}
+// Correção de auditoria: até aqui, a ÚNICA coisa que diferenciava aspecto maior de menor
+// no peso de sinastria (aspectWeight/harmContribution) era a velocidade de decaimento do
+// orbe (ORB_DECAY_DIVISOR acima) — não existia nenhum multiplicador de base por
+// categoria. Na prática isso deixava um aspecto menor MUITO exato (ex.: semiquadratura a
+// 0,13° de orbe) superar um aspecto maior com orbe só moderadamente mais largo (ex.:
+// oposição a 0,40°), mesmo os dois tocando o mesmo par bonificado em AXIS_BOOST — o que
+// não bate com a tradição astrológica (aspectos ptolomaicos maiores são estruturalmente
+// mais decisivos que os menores, não só "mais tolerantes a orbe largo"). O motor de
+// trânsito original (impactScore/ASPECTS.w acima) já tinha essa diferenciação embutida
+// no peso `w` de cada aspecto (0.15–0.3 pros menores vs 0.45–1.0 pros maiores) — ela só
+// nunca foi portada pro motor de sinastria quando ele foi criado como sistema à parte
+// (ver comentário no topo do AXIS_BOOST). 0.6 é uma correção moderada, não uma réplica
+// exata da escala do motor de trânsito (que chega a diferenças de 5x): o objetivo aqui é
+// restaurar a ORDEM (maior > menor no mesmo par/orbe), não afundar os menores a
+// irrelevância — eles continuam contando, só que um degrau abaixo por natureza, além do
+// que o orbe já penaliza.
+const MINOR_ASPECTS = new Set(['Quincunx', 'Semisextile', 'Semisquare', 'Sesquiquadrate']);
+const ASPECT_CATEGORY_MULT = { major: 1.0, minorBothPersonal: 0.6, minorOnePersonal: 0.45, minorNonPersonal: 0.35, majorNonPersonalUncurated: 0.75 };
+// Correção de auditoria #2 (calibrado com o usuário, caso Nodo-Quíron): o catMult=0.6
+// acima resolvia a inversão de ORDEM entre maior/menor no MESMO orbe (ver comentário
+// original acima do ORB_DECAY_DIVISOR), mas não segurava o caso em que os dois fatores
+// fracos se empilham — um aspecto MENOR (já um sinal mais subtil por natureza) formado
+// entre dois pontos NENHUM dos quais é planeta pessoal (CORE_PERSONAL_PLANETS: Sol/Lua/
+// Mercúrio/Vênus/Marte) é um sinal duplamente auxiliar: nem o tipo geométrico nem o par
+// carrega peso estrutural por si. Com orbe quase exato (orbW≈1), esse duplo-auxiliar
+// ainda alcançava ~72% do teto de um par tier-1 (Lua-Lua etc) — o suficiente pra
+// ultrapassar um trígono de Lua-Lua com orbe moderadamente aberto (~1.6°), o que não
+// bate com a tradição: minor aspects entre pontos (sem nenhum pessoal envolvido) são
+// lidos como nuance/reforço, não como evidência capaz de superar um dos marcadores mais
+// citados da sinastria (Lua-Lua) mesmo com esse ainda dentro do orbe tradicionalmente
+// tolerado (trígono de luminar: 6-8°).
+//
+// Correção de auditoria #3 (calibrado com o usuário, caso Lua-Quíron): a divisão acima
+// era BINÁRIA (0 pessoais vs "pelo menos 1 pessoal" → mesmo 0.6 de sempre) — isso tratava
+// Lua semiquadratura Quíron (só UM lado do par é pessoal, o outro é ponto moderno) igual
+// a Sol semiquadratura Marte (os DOIS lados pessoais, lastro tradicional pleno). Na
+// prática, Lua-Quíron quase exato (0.13°) ainda superava Mercúrio-Mercúrio trígono a
+// 2.14° (0.605 vs 0.574) — mesmo padrão do caso Nodo-Quíron, só que mais sutil porque um
+// dos dois lados É pessoal. Terceiro degrau: minorOnePersonal (0.45, entre o 0.6 de
+// "dois pessoais" e o 0.35 de "nenhum pessoal") — reconhece que Lua-Quíron carrega mais
+// peso que Nodo-Quíron (a Lua É um corpo pessoal de verdade), mas menos que Sol-Marte
+// (só um dos dois lados do par é). Empurra o empate Lua-Quíron × Mercúrio-Mercúrio de
+// ~2.00° pra ~2.73° — a mesma lógica de "correção moderada, não afundar à irrelevância"
+// já usada nos dois degraus anteriores.
+//
+// Correção de auditoria #5 (calibrado com o usuário, caso Saturno-Lilith / Lilith-
+// Plutão): as três correções acima só se aplicavam a MINOR_ASPECTS — um aspecto MAIOR
+// (quadratura, sextil, trígono, oposição, conjunção) entre dois pontos NENHUM dos quais
+// é planeta pessoal sempre recebia catMult=1.0 (major) cheio, mesmo quando o par também
+// não tinha nenhuma entrada específica em AXIS_BOOST (ou seja: nem é planeta pessoal,
+// nem é um eixo tradicionalmente citado como Nodo-Nodo/Saturno-Saturno/MC-Nodo, que o
+// próprio AXIS_BOOST já reconhece e pesa mesmo sem pessoal envolvido). Na prática isso
+// deixava Saturno quadratura Lilith a 0,47° (boost genérico 1.0 × catMult 1.0) e Lilith
+// sextil Plutão a 0,35° empatarem/superarem Lua trígono Lua a 1,72° (boost 1.35 × catMult
+// 1.0, mas orbe mais aberto) — dois pontos sem nenhum lastro pessoal nem eixo curado
+// batendo um dos aspectos mais citados da tradição só por causa do orbe apertado.
+// boost===1.0 aqui funciona como proxy de "par sem entrada curada no AXIS_BOOST" (a
+// própria axisBoost() já retorna 1.0 nesse caso — ver função abaixo) — pares que O
+// SISTEMA JÁ DECIDIU pesar mesmo sem pessoal (Nodo-Nodo, Saturno-Saturno, MC-Nodo etc.,
+// todos com boost>1.0) continuam de fora dessa penalidade, de propósito: aqui só entra o
+// "sobra" — combinação nem pessoal, nem reconhecida como eixo tradicional. 0.75 é mais
+// suave que o 0.6 do minorBothPersonal (um aspecto MAIOR ainda carrega mais peso
+// estrutural que um menor, mesmo sem pessoal/eixo — não faz sentido puni-lo tanto quanto
+// um aspecto já subtil por natureza), mas suficiente pra tirar esses pares do caminho de
+// Lua-Lua/Sol-Sol em orbes comparáveis.
+function aspectCategoryMult(aspectName, planet1, planet2, boost){
+  const personalCount = (CORE_PERSONAL_PLANETS.has(planet1) ? 1 : 0) + (CORE_PERSONAL_PLANETS.has(planet2) ? 1 : 0);
+  if (!MINOR_ASPECTS.has(aspectName)){
+    if (personalCount === 0 && boost === 1.0) return ASPECT_CATEGORY_MULT.majorNonPersonalUncurated;
+    return ASPECT_CATEGORY_MULT.major;
+  }
+  if (personalCount === 2) return ASPECT_CATEGORY_MULT.minorBothPersonal;
+  if (personalCount === 1) return ASPECT_CATEGORY_MULT.minorOnePersonal;
+  return ASPECT_CATEGORY_MULT.minorNonPersonal;
+}
 
 function parseText(text){
   const lines = text.split('\n').map(l=>l.trim()).filter(Boolean);
@@ -3047,7 +3381,12 @@ function computeScores(parsed, relType){
     // o divisor varia por tipo de aspecto (ver ORB_DECAY_DIVISOR): aspectos maiores
     // (conjunção/oposição) toleram orbe mais largo sem perder força; os menores
     // (sextil/quincunx/semisextil) enfraquecem bem mais rápido conforme o orbe abre.
-    const orbW = Math.exp(-a.orb / (ORB_DECAY_DIVISOR[a.aspect] || 2.5));
+    // Além do decaimento, um teto rígido por tipo de astro (effectiveMaxOrb): passado
+    // ele, Quíron/Lilith/Nodo/Vértice/Fortuna/transpessoais deixam de contar de vez —
+    // não é só "pesar menos", é considerar que o aspecto não existe mais nesse orbe.
+    const orbW = a.orb <= effectiveMaxOrb(a.aspect, a.planet1, a.planet2)
+      ? Math.exp(-a.orb / (ORB_DECAY_DIVISOR[a.aspect] || 2.5))
+      : 0;
 
     // fração harmônica do aspecto (considera quem está em conjunção — não só o tipo
     // geométrico — e se a conjunção é "fora de signo", o que a enfraquece)
@@ -3060,7 +3399,7 @@ function computeScores(parsed, relType){
 
     // eixos Sol-Lua, Vênus-Marte, Nodo e Ascendente/MC/IC com os pessoais pesam mais:
     // são os indicadores clássicos mais citados em sinastria (ver AXIS_BOOST acima)
-    const boost = axisBoost(a.planet1, a.planet2);
+    const boost = axisBoost(a.planet1, a.planet2, a.aspect);
 
     // Saturno/Nodo com um planeta pessoal do parceiro: marcadores narrativos de
     // compromisso/destino, rastreados à parte (não alteram o peso do aspecto em si —
@@ -3156,7 +3495,15 @@ function computeScores(parsed, relType){
     const planetPair = [a.planet1, a.planet2].sort().join('-');
     const reciprocityBoost = (recipCounts.get(planetPair) || 1) >= 2 ? 1.15 : 1.0;
 
-    const harmContribution = orbW * boost * generationalDiscount * reciprocityBoost;
+    // Categoria de aspecto (maior/menor, com desconto composto se menor E sem pessoal
+    // nenhum no par; e agora também um desconto mais leve se MAIOR, sem pessoal E sem
+    // eixo curado em AXIS_BOOST — ver correção de auditoria #5 em ASPECT_CATEGORY_MULT
+    // acima). Passa `boost` (já calculado logo acima) pra função conseguir distinguir
+    // "sem pessoal mas eixo curado" (ex.: Nodo-Nodo) de "sem pessoal e sem eixo nenhum"
+    // (ex.: Saturno-Lilith).
+    const catMult = aspectCategoryMult(a.aspect, a.planet1, a.planet2, boost);
+
+    const harmContribution = orbW * boost * generationalDiscount * reciprocityBoost * catMult;
 
     // Harmonia geral: antes somava TODO aspecto do relatório, "pizza panorâmica" sem
     // curadoria — decisão pós-discussão foi restringir esse pool a aspectos que já são
@@ -3177,7 +3524,12 @@ function computeScores(parsed, relType){
     // normalmente com 1 categoria, mas os pares em DUAL_CATEGORY_PAIRS retornam 2 (o
     // aspecto conta cheio nas duas, sem diluir — ver comentário em DUAL_CATEGORY_PAIRS
     // acima de categoryPoolFor).
-    if (catKeys){
+    // orbW > 0 abaixo: sem isso, um aspecto zerado pelo teto de exatidão por tipo de astro
+    // (effectiveMaxOrb — ver comentário no topo do loop) ainda somava eligibleCount e
+    // aparecia no texto do hover das barras de categoria (showBarTooltip), mesmo
+    // contribuindo ZERO pro harmoniousW/tenseW reais — o número "(N marcadores)" e a
+    // lista ao passar o mouse ficavam desalinhados com o peso de fato usado no cálculo.
+    if (catKeys && orbW > 0){
       for (const catKey of catKeys){
         catPool[catKey].harmoniousW += harmContribution * hFrac;
         catPool[catKey].tenseW      += harmContribution * (1 - hFrac);
@@ -3193,14 +3545,17 @@ function computeScores(parsed, relType){
     // Estrutura é acumulado aqui. O harmonyPct que fazia o papel do antigo eixo Imediato
     // agora vem do sub-pool da categoria Atração (catPool.sexual, ver mais abaixo, depois
     // que categoryScores é montado).
-    if (pool === 'structure'){
+    // Mesmo gate orbW > 0 do catPool acima — um aspecto zerado (orb além do teto do
+    // tipo de astro) não deve inflar eligibleCount nem aparecer nos Details do hover
+    // de Estrutura/Destino, mesmo contribuindo 0 pro harmoniousW/tenseW.
+    if (pool === 'structure' && orbW > 0){
       structureHarmoniousW += harmContribution * hFrac;
       structureTenseW      += harmContribution * (1 - hFrac);
       structureEligibleCount++;
       if (markerCat === 'harmonic') structureHarmonicDetails.push(formatMarkerDetail(a, markerCat));
       else if (markerCat === 'ambivalent') structureAmbivalentDetails.push(formatMarkerDetail(a, markerCat));
       else structureTenseDetails.push(formatMarkerDetail(a, markerCat));
-    } else if (pool === 'destiny'){
+    } else if (pool === 'destiny' && orbW > 0){
       destinyHarmoniousW += harmContribution * hFrac;
       destinyTenseW      += harmContribution * (1 - hFrac);
       destinyEligibleCount++;
@@ -3220,8 +3575,11 @@ function computeScores(parsed, relType){
     // Veredito com a mesma força via o intensificador. Com o filtro alinhado, Nitidez
     // volta a significar especificamente "quanto do que É reconhecido como astrologicamente
     // significativo está vindo com orbe apertado" — o mesmo universo de aspectos que
-    // qualquer outro número do app já lê como sinal real.
-    if (!bothOuter && isSignificantForHarmony){
+    // qualquer outro número do app já lê como sinal real. Também exige orbW > 0 agora
+    // (mesmo gate do catPool/estrutura/destino acima): um aspecto zerado pelo teto de
+    // exatidão por tipo de astro não é "sinal real" nenhum, então não deve contar nem
+    // pro denominador nem pro numerador de Nitidez.
+    if (!bothOuter && isSignificantForHarmony && orbW > 0){
       strengthEligibleCount++;
       if (a.orb < 2) tightCount++;
 
@@ -3235,42 +3593,82 @@ function computeScores(parsed, relType){
   }
 
   // Sobreposições de casa (planeta de A na casa de B) agora alimentam presence de
-  // categoria via o checklist HOUSE_CATEGORY_MARKERS (ver comentário acima) — só o par
-  // planeta+casa reconhecido como marcador específico entra, com peso fixo (não tem
-  // orbe pra graduar) e só em presence, nunca em harmoniousW/tenseW/harmonyPct (casa
-  // não diz se o contato é fácil ou tenso, só que a área está ativada). Continuam
-  // também alimentando o chip "Casas · convergência" (computeHouseConvergence).
+  // categoria via o checklist HOUSE_CATEGORY_MARKERS (ver comentário acima). Duas
+  // camadas de peso, que se somam sem competir:
+  //  1) presence (houseW) — sempre soma, peso-base × angularidade (houseAngularityMult)
+  //  2) valência (harmoniousW/tenseW) — SÓ pros planetas em HOUSE_PLANET_VALENCE
+  //     (Vênus/Júpiter tendem a favorável, Saturno/Marte tendem a pesado/tenso,
+  //     Plutão/Netuno/Quíron/Lilith são genuinamente ambivalentes — ver comentário
+  //     lá), também escalada por angularidade. Planetas
+  //     fora dessa lista (Sol/Lua/Mercúrio/Urano/Nodos/Vértice/Fortuna)
+  //     continuam neutros — só presence, sem empurrar harmoniousW/tenseW/harmonyPct.
+  // Continuam também alimentando o chip "Casas · convergência" (computeHouseConvergence).
   //
-  // houseDetails guarda o texto de cada um desses marcadores — antes só o houseCount
-  // existia (um número), então eligibleCount (aspectos + casas) podia contar um
-  // marcador de casa sem ele aparecer em NENHUM tooltip: o hover das barras só lia
-  // harmonicDetails/tenseDetails, que só recebem entrada de aspecto. Resultado visível:
-  // "2 marcadores encontrados" com só 1 linha no hover, o segundo sendo uma casa
-  // silenciosa. Sem 🟢/🔴 na frente (não tem orbe pra dizer se flui/atrita).
+  // houseDetails guarda o texto dos marcadores SEM valência (planeta neutro) — sem
+  // 🟢/🔴 na frente, porque não há leitura de lado. Os COM valência (Vênus/Júpiter/
+  // Saturno/Marte/Plutão/Quíron) entram em harmonicDetails/tenseDetails, coloridos
+  // como qualquer aspecto, refletindo o viés fixo do planeta em vez de orbe.
   for (const h of parsed.houses){
     // categoryPoolForHouse retorna uma LISTA — normalmente com 1 categoria, mas pares em
     // HOUSE_DUAL_CATEGORY_MARKERS (ex.: Plutão-7) retornam 2 (conta cheio nas duas, sem
     // diluir — mesmo padrão de categoryPoolFor/DUAL_CATEGORY_PAIRS pros aspectos).
     const houseCatKeys = categoryPoolForHouse(h.planet, h.house);
     if (houseCatKeys){
-      // NÃO usa houseMarkerWeightFor(h.house) aqui (peso por angularidade) — auditoria:
-      // essas entradas de HOUSE_CATEGORY_MARKERS já são pares curados por AFINIDADE
-      // TEMÁTICA (Mercúrio-3ª/9ª pela regência mental, Júpiter-9ª por regência
-      // tradicional, Lua-12ª por fusão inconsciente), um eixo tradicional diferente de
-      // "quanto QUALQUER planeta se expressa numa casa" (angular/sucedente/cadente).
-      // Aplicar o desconto de cadente em cima de pares já selecionados por relevância
-      // temática penaliza exatamente os marcadores certos por um motivo errado — e,
-      // como nenhum desses pares curados cai numa casa sucedente, o efeito colateral
-      // era enfraquecer só Intelectual/parte de Emocional (que têm marcador em casa
-      // cadente) sem tocar Prático/Sexual (que não têm) — viés entre categorias sem
-      // base astrológica, só coincidência de numeração de casa. houseMarkerWeightFor
-      // continua disponível pra um eventual marcador genérico (planeta pessoal em
-      // QUALQUER casa, sem curadoria temática prévia) — não existe um hoje.
+      // Angularidade agora GRADUA o peso de um par já selecionado por tema (ver
+      // CALIBRATION.houseAngularityMult) — não compete com a curadoria temática, só
+      // ajusta quanto ela pesa uma vez dentro (1/4/7/10 mais forte, 3/6/9/12 mais
+      // difuso, resto no meio).
+      const angMult = houseAngularityMult(h.house);
       const housePlanetLabel = PLANET_LABEL_PT[h.planet] || h.planet;
+      const valenceFrac = HOUSE_PLANET_VALENCE.get(h.planet);
+      const houseLabel = `${h.p1} (${housePlanetLabel}) na ${h.house}ª de ${h.p2}`;
+      // Sol/Lua em MARRIAGE_HOUSES já ganham sua própria linha colorida ("— compromisso")
+      // no bloco de empurrão logo abaixo — sem valência própria em HOUSE_PLANET_VALENCE,
+      // então sem esse gate a MESMA casa aparecia 2x na lista do hover (uma neutra aqui,
+      // uma verde ali), parecendo duplicada. Saturno também fica de fora do split
+      // padrão, mas por outro motivo: TEM valência própria (tenso, 0.20) E o empurrão de
+      // compromisso ao mesmo tempo — duas leituras tradicionais reais e distintas (não
+      // a mesma frase repetida). Decisão pós-discussão: em vez de mostrar duas linhas
+      // separadas (🔴 sozinha aqui + 🟢 "— compromisso" no bloco de empurrão, que
+      // parecia contraditório/bugado de novo, mesmo sendo correto), as duas leituras se
+      // fundem numa linha 🟡 só, com texto que nomeia as duas explicitamente — ver
+      // isSaturnCommitPair abaixo. Só a EXIBIÇÃO muda; harmoniousW/tenseW (aqui) e o
+      // harmoniousW extra do empurrão (bloco abaixo) continuam somando exatamente igual.
+      const isSunMoonCommitPair = valenceFrac === undefined && MARRIAGE_HOUSES.has(h.house) &&
+        (h.planet === 'Sun' || h.planet === 'Moon');
+      const isSaturnCommitPair = h.planet === 'Saturn' && MARRIAGE_HOUSES.has(h.house);
       for (const houseCatKey of houseCatKeys){
-        catPool[houseCatKey].houseW += CALIBRATION.houseMarkerWeight;
+        catPool[houseCatKey].houseW += CALIBRATION.houseMarkerWeight * angMult;
         catPool[houseCatKey].houseCount++;
-        catPool[houseCatKey].houseDetails.push(`🏠 ${h.p1} (${housePlanetLabel}) na ${h.house}ª de ${h.p2}`);
+        if (valenceFrac !== undefined){
+          const valenceWeight = CALIBRATION.houseValenceWeight * angMult;
+          catPool[houseCatKey].harmoniousW += valenceWeight * valenceFrac;
+          catPool[houseCatKey].tenseW      += valenceWeight * (1 - valenceFrac);
+          if (isSaturnCommitPair){
+            // Linha fundida: nomeia as duas leituras (peso/restrição do Saturno-casa
+            // genérico E o marcador clássico de compromisso do Saturno-ângulo) numa só,
+            // pra não repetir a mesma sobreposição colorida de dois jeitos diferentes.
+            catPool[houseCatKey].ambivalentDetails.push(`🟡 🏠 ${houseLabel} — pesa, mas também estrutura de compromisso`);
+          } else if (valenceFrac > 0.4 && valenceFrac < 0.6){
+            // Mesma faixa "genuinamente ambivalente" que markerCategory usa pros
+            // aspectos (0.41–0.59, ver comentário lá) — hoje só Lilith (0.5) cai aqui
+            // por esse caminho. Vai pra ambivalentDetails (não harmonicDetails/
+            // tenseDetails direto): essa lista já é automaticamente somada nos dois
+            // lados mais abaixo em categoryScores (ver "ambivalentes entram nos dois
+            // lados" perto de poolHarmonyPct) e, no hover combinado (allLines), o Set
+            // dedupe colapsa a MESMA string que apareceria nos dois lados numa linha só.
+            catPool[houseCatKey].ambivalentDetails.push(`🟡 🏠 ${houseLabel}`);
+          } else {
+            const prefix = valenceFrac >= 0.5 ? '🟢' : '🔴';
+            if (valenceFrac >= 0.5) catPool[houseCatKey].harmonicDetails.push(`${prefix} 🏠 ${houseLabel}`);
+            else catPool[houseCatKey].tenseDetails.push(`${prefix} 🏠 ${houseLabel}`);
+          }
+        } else if (isSunMoonCommitPair){
+          // linha suprimida aqui de propósito — o bloco de empurrão abaixo adiciona a
+          // versão colorida "— compromisso" pra essa mesma casa, mais informativa.
+        } else {
+          catPool[houseCatKey].houseDetails.push(`🏠 ${houseLabel}`);
+        }
       }
     }
     // Empurrão harmônico estrutural: Sol/Lua/Saturno na 1ª/4ª/7ª/10ª do parceiro (mesmas
@@ -3286,6 +3684,32 @@ function computeScores(parsed, relType){
       structureHarmoniousW += CALIBRATION.commitmentHouseStructureWeight;
       structureEligibleCount++;
       structureHarmonicDetails.push(`🏠 ${h.p1} (${PLANET_LABEL_PT[h.planet] || h.planet}) na ${h.house}ª de ${h.p2}`);
+      // Decisão pós-discussão (caso real: Sol recíproco na 7ª de cada um) — o MESMO
+      // empurrão agora também soma na categoria de conteúdo (Prático/Emocional, via
+      // categoryPoolForHouse), não só no eixo Estrutura isolado. Antes, esse marcador
+      // (o mais clássico de compromisso em sinastria) movia structureHarmonyPct mas
+      // aparecia como neutro na barra de categoria correspondente — inconsistente:
+      // não existe leitura tradicional em que "Sol do parceiro na sua 7ª" é favorável
+      // num painel e neutro noutro. Nota: pra Saturno, isso soma ao MESMO TEMPO que o
+      // viés tenso de HOUSE_PLANET_VALENCE (Saturno está nas duas listas) — proposital,
+      // não conflito: são duas leituras tradicionais reais e coexistentes (Saturno-
+      // ângulo pesa/restringe por natureza, MAS especificamente numa das 4 casas de
+      // compromisso é also o marcador clássico de vínculo que dura — a leitura de
+      // "compromisso" vence no total por ter peso maior, sem apagar a de "peso" que a
+      // acompanha). Decisão pós-discussão: pra Saturno, a linha de texto das duas
+      // leituras já foi escrita FUNDIDA (🟡, "pesa, mas também estrutura de
+      // compromisso") no bloco de valência acima (ver isSaturnCommitPair) — aqui só o
+      // PESO (harmoniousW) soma, sem escrever uma segunda linha verde "— compromisso"
+      // que duplicaria visualmente a mesma sobreposição.
+      const commitCatKeys = categoryPoolForHouse(h.planet, h.house);
+      if (commitCatKeys){
+        for (const catKey of commitCatKeys){
+          catPool[catKey].harmoniousW += CALIBRATION.commitmentHouseStructureWeight;
+          if (h.planet !== 'Saturn'){
+            catPool[catKey].harmonicDetails.push(`🟢 🏠 ${h.p1} (${PLANET_LABEL_PT[h.planet] || h.planet}) na ${h.house}ª de ${h.p2} — compromisso`);
+          }
+        }
+      }
     }
     // Mesmo empurrão, eixo Destino: Nodo/Nodo Sul/Vértice nos mesmos quatro ângulos —
     // ver computeDestinyHouses e CALIBRATION.destinyHouseWeight acima. Antes desse
@@ -4159,9 +4583,13 @@ function renderCategoryVisuals(categoryScores, relType){
     // Hover: verde mostra os marcadores que contam pro lado que flui nessa categoria,
     // vermelho os que contam pro lado que atrita (ambivalentes aparecem nos dois — ver
     // comentário em computeScores, onde harmonicDetails/tenseDetails são montados).
-    // Marcadores de casa não entram no split verde/vermelho: não têm orbe pra dizer se
-    // fluem ou atritam (ver HOUSE_CATEGORY_MARKERS) — mas TÊM texto (houseDetails,
-    // adicionado junto do bugfix abaixo) e precisam aparecer em algum lugar.
+    // Marcadores de casa SEM valência definida (a maioria — ver HOUSE_PLANET_VALENCE)
+    // não entram no split verde/vermelho: não têm leitura tradicional de lado, só
+    // presença (ficam em houseDetails, abaixo). Os COM valência (Vênus/Júpiter/Saturno/
+    // Marte/Plutão/Netuno/Quíron/Lilith) JÁ entram direto em harmonicDetails/tenseDetails
+    // (ou ambivalentDetails, no caso dos ambivalentes) no loop de casas (ver comentário
+    // lá), então aparecem coloridos no hover dos fills como
+    // qualquer aspecto — é esse o ponto da mudança pós-discussão.
     const harmonicLines = catDataFor(key).harmonicDetails || [];
     const tenseLines = catDataFor(key).tenseDetails || [];
     const houseLines = catDataFor(key).houseDetails || [];
@@ -5545,24 +5973,126 @@ function escapeHtml(str){
 // Assinatura direção-neutra (Sol trígono Lua == Lua trígono Sol) — cobre o caso mais
 // comum de reutilização entre sinastrias, onde o que importa é o par de planetas e o
 // tipo de aspecto, não quem colou como Pessoa 1 ou Pessoa 2 no relatório.
+// Fusão Asc/Desc e MC/IC no dicionário (pedido do usuário): quadratura com o
+// Ascendente é a MESMA configuração (mesmo nome de aspecto) vista do Descendente
+// (mesmo eixo, 180° opostos — 90° de um ponto é sempre também 90° do seu oposto), e o
+// mesmo vale pro eixo MC/IC. Não faz sentido cadastrar o significado duas vezes pra
+// essencialmente a mesma coisa olhada de dois lados — então, nesse aspecto, DSC é
+// tratado como Ascendente e IC como MC na hora de gerar a assinatura do padrão,
+// fazendo os dois caírem na mesma linha do dicionário (e herdando o mesmo significado
+// cadastrado).
+// Conjunção e oposição são diferentes: elas TROCAM de identidade de um lado pro outro
+// do eixo, não permanecem a mesma (correção de bug reportado pelo usuário — a versão
+// anterior tratava as três como "a mesma coisa", o que só é verdade pra quadratura).
+// Se o Ascendente de alguém está em conjunção com a Lua do parceiro, o Descendente
+// dessa mesma pessoa está, nesse instante, em OPOSIÇÃO com a mesma Lua (são pontos
+// opostos: 0° de um é 180° do outro) — e vice-versa. Ou seja, "Descendente oposição
+// Lua" não é igual a "Ascendente oposição Lua": é a mesma configuração que "Ascendente
+// conjunção Lua". Por isso essas duas trocam de aspecto (via NODE_MIRROR_ASPECT, a
+// mesma tabela já usada em collapseAxisMirrors pro Nodo Norte/Sul) ao serem
+// normalizadas pro lado Ascendente/MC, e o rótulo mostrado nesse caso é o do ponto
+// único (Ascendente ou MC), nunca o combinado "Ascendente/Descendente" — combinar
+// afirmaria (errado) que o Descendente está no mesmo aspecto, quando na verdade está
+// no espelhado.
+// Fora desses três aspectos (conjunção/oposição/quadratura) a fusão NÃO acontece: um
+// trígono ao Ascendente vira sextil ao Descendente (ângulo diferente, sem forçar a
+// mesma configuração), então continuam como padrões distintos, cada um com seu
+// próprio significado.
+const ANGLE_AXIS_LABEL_PT = { Ascendant: 'Ascendente/Descendente', MC: 'MC/IC' };
+// Só quadratura usa o rótulo fundido Asc/Desc (ou MC/IC) — é o único dos três
+// aspectos "travados ao eixo" que preserva o mesmo nome dos dois lados. Conjunção e
+// oposição, depois de normalizadas (aspecto já trocado por normalizeAxisAspect),
+// representam sempre a leitura do lado Ascendente/MC — usam o rótulo de ponto único.
+const SYMMETRIC_MERGED_LABEL_ASPECTS = new Set(['Square']);
+// Normaliza planeta(s) e aspecto de um contato pro lado canônico Ascendente/MC:
+// DSC→Ascendente e IC→MC sempre trocam o aspecto pelo seu espelho geométrico
+// (NODE_MIRROR_ASPECT: conjunção↔oposição, quadratura fica quadratura) quando o
+// aspecto é um dos três travados ao eixo; fora deles, planeta e aspecto voltam sem
+// alteração. Se os dois lados do contato forem pontos do eixo (ex.: DSC-IC), a troca é
+// aplicada uma vez por lado — duas trocas em conjunção/oposição se cancelam (volta ao
+// aspecto original), o que é geometricamente correto: deslocar os dois pontos por 180°
+// não muda o ângulo relativo entre eles.
+function normalizeAxisAspect(planet1, planet2, aspect){
+  let p1 = planet1, p2 = planet2, asp = aspect;
+  if (DSC_ASC_SYMMETRIC_ASPECTS.has(asp)){
+    if (p1 === 'DSC'){ p1 = 'Ascendant'; asp = NODE_MIRROR_ASPECT[asp] || asp; }
+    else if (p1 === 'IC'){ p1 = 'MC'; asp = NODE_MIRROR_ASPECT[asp] || asp; }
+    if (p2 === 'DSC'){ p2 = 'Ascendant'; asp = NODE_MIRROR_ASPECT[asp] || asp; }
+    else if (p2 === 'IC'){ p2 = 'MC'; asp = NODE_MIRROR_ASPECT[asp] || asp; }
+  }
+  return { p1, p2, aspect: asp };
+}
 function aspectSignature(a){
-  const pair = [a.planet1, a.planet2].sort();
-  return `ASPECT|${pair[0]}|${pair[1]}|${a.aspect}`;
+  const { p1, p2, aspect } = normalizeAxisAspect(a.planet1, a.planet2, a.aspect);
+  const pair = [p1, p2].sort();
+  return `ASPECT|${pair[0]}|${pair[1]}|${aspect}`;
 }
 function aspectPatternLabel(a){
-  const pair = [a.planet1, a.planet2].sort();
-  const l1 = PLANET_LABEL_PT[pair[0]] || pair[0];
-  const l2 = PLANET_LABEL_PT[pair[1]] || pair[1];
-  const asp = ASPECT_LABEL_PT[a.aspect] || a.aspect;
+  const { p1, p2, aspect } = normalizeAxisAspect(a.planet1, a.planet2, a.aspect);
+  const useMergedLabel = SYMMETRIC_MERGED_LABEL_ASPECTS.has(aspect);
+  const pair = [p1, p2].sort();
+  const labelFor = (p) => (useMergedLabel && ANGLE_AXIS_LABEL_PT[p]) || PLANET_LABEL_PT[p] || p;
+  const l1 = labelFor(pair[0]);
+  const l2 = labelFor(pair[1]);
+  const asp = ASPECT_LABEL_PT[aspect] || aspect;
   return `${l1} ${asp} ${l2}`;
+}
+// Nota complementar pra lista "Nesta sinastria:" (pedido do usuário): mostra a leitura
+// espelhada do outro lado do eixo pros três aspectos travados. Conjunção/oposição
+// invertem aspecto E signo (Ascendente e Descendente estão sempre em signos opostos —
+// "Ascendente oposição Lua em Touro" é a mesma coisa que "Descendente conjunção Lua em
+// Escorpião"); quadratura só acrescenta o eco no signo oposto, sem trocar o aspecto
+// (Ascendente e Descendente quadram a Lua ao mesmo tempo, só que vistos de signos
+// opostos).
+function axisMirrorNote(a){
+  if (!DSC_ASC_SYMMETRIC_ASPECTS.has(a.aspect)) return '';
+  const AXIS_POINTS = new Set(['Ascendant', 'DSC', 'MC', 'IC']);
+  const p1IsAxis = AXIS_POINTS.has(a.planet1);
+  const p2IsAxis = AXIS_POINTS.has(a.planet2);
+  if (p1IsAxis === p2IsAxis) return ''; // nem um nem os dois lados isolados no eixo: sem nota simples (ex: DSC-IC)
+  const axisPlanet = p1IsAxis ? a.planet1 : a.planet2;
+  const axisSign = p1IsAxis ? a.sign1 : a.sign2;
+  const otherLabel = PLANET_LABEL_PT[p1IsAxis ? a.planet2 : a.planet1] || (p1IsAxis ? a.planet2 : a.planet1);
+  const mirrorPoint = { Ascendant: 'DSC', DSC: 'Ascendant', MC: 'IC', IC: 'MC' }[axisPlanet];
+  const mirrorLabel = PLANET_LABEL_PT[mirrorPoint] || mirrorPoint;
+  const mirrorSign = axisSign ? OPPOSITE_SIGN[axisSign] : null;
+  const mirrorSignLabel = mirrorSign ? (SIGN_LABEL_PT[mirrorSign] || mirrorSign) : '';
+  if (a.aspect === 'Square'){
+    return ` [o ${mirrorLabel}${mirrorSignLabel ? ', em '+mirrorSignLabel : ''}, também quadra ${otherLabel}]`;
+  }
+  const mirrorAspect = NODE_MIRROR_ASPECT[a.aspect];
+  const mirrorAspLabel = ASPECT_LABEL_PT[mirrorAspect] || mirrorAspect;
+  return ` [= ${mirrorLabel} ${mirrorAspLabel} ${otherLabel}${mirrorSignLabel ? ' em '+mirrorSignLabel : ''}]`;
 }
 // Mesma fórmula usada em computeScores: decaimento exponencial por orbe (varia por
 // tipo de aspecto) × boost de eixo/tier do par (AXIS_BOOST via axisBoost — pares sem
 // entrada específica caem no genérico 1.0, então TODO aspecto reconhecido entra aqui,
 // mesmo os sem peso extra de categoria/eixo).
+//
+// Correção de auditoria #4 (calibrado com o usuário, caso Plutão-Plutão): esta função
+// não aplicava o generationalDiscount (0.3× pra Urano/Netuno/Plutão mútuos entre si —
+// ver TRANSPERSONAL_PLANETS/bothOuter em computeScores) que a Harmonia geral já usa.
+// Sem isso, um Plutão-Plutão conjunção a 2.36° (boost genérico 1.0, sem entrada em
+// AXIS_BOOST) empatava/superava uma Lua semiquadratura Quíron quase exata (0.455 vs
+// 0.454) — apesar de Plutão-Plutão mútuo ser o exemplo clássico de "falso sinal" em
+// sinastria (planeta lento: qualquer par de idade parecida tem esse aspecto, então ele
+// mede geração, não o vínculo específico entre as duas pessoas). Faltava replicar aqui
+// o mesmo desconto que a Harmonia geral já aplica, senão a lista de dicionário e o
+// impacto exibido tratam esse falso sinal como equivalente a um aspecto pessoal real.
 function aspectWeight(a){
-  const orbW = Math.exp(-a.orb / (ORB_DECAY_DIVISOR[a.aspect] || 2.5));
-  return orbW * axisBoost(a.planet1, a.planet2);
+  const orbW = a.orb <= effectiveMaxOrb(a.aspect, a.planet1, a.planet2)
+    ? Math.exp(-a.orb / (ORB_DECAY_DIVISOR[a.aspect] || 2.5))
+    : 0;
+  const bothOuter = TRANSPERSONAL_PLANETS.has(a.planet1) && TRANSPERSONAL_PLANETS.has(a.planet2);
+  const generationalDiscount = bothOuter ? 0.3 : 1.0;
+  // boost calculado uma vez e reaproveitado pro catMult (correção de auditoria #5 — ver
+  // comentário em ASPECT_CATEGORY_MULT/aspectCategoryMult): precisa do mesmo `boost` que
+  // computeScores já usa, pra distinguir par sem pessoal MAS com eixo curado (ex.:
+  // Nodo-Nodo, boost>1.0) de par sem pessoal E sem eixo nenhum (ex.: Saturno-Lilith,
+  // boost genérico 1.0) — sem isso esta função (usada na lista de "impacto" exibida)
+  // ficava dessincronizada da fórmula de Harmonia geral, que já recebeu a correção.
+  const boost = axisBoost(a.planet1, a.planet2, a.aspect);
+  return orbW * boost * aspectCategoryMult(a.aspect, a.planet1, a.planet2, boost) * generationalDiscount;
 }
 function houseSignature(h){
   return `HOUSE|${h.planet}|${h.house}`;
@@ -5674,6 +6204,15 @@ function applyDictFilter(patterns, filterValue){
   if (kind === 'axis') return patterns.filter(p => p.axis === value);
   return patterns;
 }
+// Padrões com weight 0 (aspecto cujo orbe passou do teto específico do tipo de astro —
+// ver effectiveMaxOrb/ORB_TYPE_MULT) ficam escondidos por padrão, mesmo critério e mesmo
+// rótulo do checkbox "Mostrar zerados" já usado nos 4 painéis de aspectos da Efeméride
+// Pessoal. Casa nunca zera (houseWeight não depende de orbe), então esse filtro só afeta
+// padrões kind==='aspect'.
+function applyDictZeroedFilter(patterns, showZeroed){
+  if (showZeroed) return patterns;
+  return patterns.filter(p => p.weight > 0);
+}
 
 function findDictEntry(signature, scope, relType, synastryId){
   return dictionary.find(e => e.signature === signature && e.scope === scope &&
@@ -5691,7 +6230,8 @@ function renderDictionaryPanel(parsed, relType, synastryId){
   const container = document.getElementById('dictionaryList');
   const allPatterns = buildDictionaryPatterns(parsed);
   const filterValue = document.getElementById('dictFilterSelect').value;
-  const patterns = applyDictFilter(allPatterns, filterValue);
+  const showZeroed = document.getElementById('dictShowZeroed').checked;
+  const patterns = applyDictZeroedFilter(applyDictFilter(allPatterns, filterValue), showZeroed);
   container.innerHTML = '';
   if (allPatterns.length === 0){
     container.innerHTML = '<div class="dict-empty">Nenhum aspecto ou casa reconhecido nesta sinastria.</div>';
@@ -5885,7 +6425,7 @@ function initDictRowBody(row, body, pattern, relType, synastryId){
 
   function draw(){
     const instanceLines = pattern.instances.slice(0, 6).map(inst => pattern.kind === 'aspect'
-      ? formatMarkerDetail(inst)
+      ? formatMarkerDetail(inst) + axisMirrorNote(inst)
       : `${inst.p1} (${PLANET_LABEL_PT[inst.planet] || inst.planet}) na ${inst.house}ª de ${inst.p2}`
     ).join(' · ');
 
@@ -6181,6 +6721,27 @@ function importDictionaryFromJSON(text){
   alert(`Importação concluída: ${imported} nova${imported === 1 ? '' : 's'}, ${updated} atualizada${updated === 1 ? '' : 's'}${skippedNote}${promptNote}.`);
 }
 
+document.getElementById('clearAllDictBtn').addEventListener('click', () => {
+  if (dictionary.length === 0) return;
+  if (confirm(`Apagar todo o dicionário (${dictionary.length} significado${dictionary.length === 1 ? '' : 's'} — inclusive os reutilizáveis, de todas as sinastrias)? Essa ação não pode ser desfeita.`)){
+    dictionary = [];
+    saveDictionary();
+    renderDictionaryForCurrentSelection();
+  }
+});
+document.getElementById('clearSynastryDictBtn').addEventListener('click', () => {
+  if (!currentDictSynastryId) return;
+  const toRemove = dictionary.filter(e => e.scope === 'unique' && e.synastryId === currentDictSynastryId);
+  if (toRemove.length === 0){
+    alert('Essa sinastria não tem nenhum significado exclusivo cadastrado — só os reutilizáveis se aplicam a ela, e esses continuam intactos.');
+    return;
+  }
+  if (confirm(`Remover ${toRemove.length} significado${toRemove.length === 1 ? '' : 's'} cadastrado${toRemove.length === 1 ? '' : 's'} só para esta sinastria? Os reutilizáveis (para todos os vínculos ou para a categoria dela) continuam valendo.`)){
+    dictionary = dictionary.filter(e => !(e.scope === 'unique' && e.synastryId === currentDictSynastryId));
+    saveDictionary();
+    renderDictionaryForCurrentSelection();
+  }
+});
 document.getElementById('exportDictBtn').addEventListener('click', () => {
   if (dictionary.length === 0 && Object.keys(promptConfigs).length === 0){
     alert('Nada pra exportar ainda — cadastre pelo menos um significado ou uma config de prompt primeiro.');
